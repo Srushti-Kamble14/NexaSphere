@@ -141,7 +141,7 @@ function Cursor() {
     <>
       {/* Big ambient glow — follows mouse directly */}
       <div ref={glowRef} style={{
-        position:'fixed', pointerEvents:'none', zIndex:9990,
+        position:'fixed', pointerEvents:'none', zIndex:10000,
         width:'320px', height:'320px', borderRadius:'50%',
         background:'radial-gradient(circle, rgba(0,212,255,.055) 0%, rgba(123,111,255,.03) 40%, transparent 70%)',
         transform:'translate(-50%,-50%)',
@@ -150,7 +150,7 @@ function Cursor() {
 
       {/* Trail dot — slower, creates depth */}
       <div ref={trailRef} style={{
-        position:'fixed', pointerEvents:'none', zIndex:9992,
+        position:'fixed', pointerEvents:'none', zIndex:10002,
         width:'28px', height:'28px', borderRadius:'50%',
         background:'radial-gradient(circle, var(--c2) 0%, transparent 70%)',
         transform:'translate(-50%,-50%)',
@@ -160,7 +160,7 @@ function Cursor() {
 
       {/* Main anti-gravity orb */}
       <div ref={orbRef} style={{
-        position:'fixed', pointerEvents:'none', zIndex:9995,
+        position:'fixed', pointerEvents:'none', zIndex:10005,
         width:'18px', height:'18px', borderRadius:'50%',
         background:'radial-gradient(circle at 35% 35%, #fff 0%, var(--c1) 40%, var(--c2) 100%)',
         boxShadow:'0 0 10px var(--c1), 0 0 24px rgba(0,212,255,.5), 0 0 50px rgba(123,111,255,.2)',
@@ -353,13 +353,13 @@ export default function App() {
       {/* Cinematic opening — plays once on load */}
       {!cinDone&&<CinematicOpening theme={theme} onDone={()=>setCinDone(true)}/>}
 
-      <div id="scroll-progress"/>
+      {cinDone&&<div id="scroll-progress"/>}
       <Cursor/>
       <Wipe on={wipeOn} ph={wipePh}/>
 
 
       {/* Theme toggle — simple pill, no animation */}
-      <button id="theme-toggle" onClick={toggleTheme}
+      {cinDone&&<button id="theme-toggle" onClick={toggleTheme}
         aria-label="Toggle theme"
         title={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}>
         <span className="tgl-track">
@@ -367,10 +367,10 @@ export default function App() {
           <span className="tgl-icon moon">🌙</span>
           <span className="tgl-thumb"/>
         </span>
-      </button>
+      </button>}
 
       {cinDone&&<ParticleBackground theme={theme}/>}
-      <Navbar activeTab={activeTab} onTabChange={onTab}/>
+      {cinDone&&<Navbar activeTab={activeTab} onTabChange={onTab}/>}
 
       <main style={{paddingTop:nh,position:'relative',zIndex:1}}>
         {/* Section pages — navbar tab clicks */}
@@ -430,7 +430,7 @@ export default function App() {
             <MembershipPage onBack={onBackHome}/>
           </PageIn>
         )}
-        {!page&&(
+        {!page&&cinDone&&(
           <PageIn k="main">
             <HeroSection onTabChange={onTab} onApply={openApply} onJoin={openJoin} theme={theme}/>
             <ActivitiesSection onNavigate={onNavigate}/>
@@ -442,7 +442,7 @@ export default function App() {
         )}
       </main>
 
-      <button id="back-to-top" aria-label="Back to top">↑</button>
+      {cinDone&&<button id="back-to-top" aria-label="Back to top">↑</button>}
     </>
   );
 }

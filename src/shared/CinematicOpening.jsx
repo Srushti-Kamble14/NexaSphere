@@ -80,6 +80,7 @@ function IntroContent({ phase, count, tagline, accent, accent2, muted, grad, bg,
         height:'1.25em', overflow:'visible', marginBottom:'13px',
         perspective:'600px', fontFamily:'Orbitron,monospace',
         fontSize:'clamp(2rem,6vw,4.2rem)', fontWeight:900, letterSpacing:'.15em',
+        whiteSpace:'nowrap',
       }}>
         {WORD.split('').map((ch,li)=>(
           <span key={li} style={{

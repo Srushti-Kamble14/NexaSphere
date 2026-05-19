@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { events as fallbackEvents } from '../../data/eventsData';
 import { DynamicIcon } from '../../shared/Icons';
+import BookmarkButton from '../../components/common/BookmarkButton';
 
 export default function EventsSection({ onEventClick, events = fallbackEvents }) {
   useEffect(()=>{
@@ -65,6 +66,7 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
                     animationDelay:`${i*.11}s`,
                     cursor: isKSS ? 'none' : 'default',
                     transition: 'all .28s ease',
+                    position: 'relative'
                   }}
                   onClick={isKSS ? () => onEventClick?.(ev) : undefined}
                   onMouseEnter={isKSS ? e => {
@@ -78,6 +80,10 @@ export default function EventsSection({ onEventClick, events = fallbackEvents })
                     e.currentTarget.style.transform = '';
                   } : undefined}
                 >
+                  <BookmarkButton
+                    item={{ id: `event-${ev.id}`, type: 'Event', title: ev.name, date: ev.dateText ?? ev.date }}
+                    style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20 }}
+                  />
                   <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'7px'}}>
                     <span style={{display:'flex',color:'var(--c1)'}}><DynamicIcon name={ev.icon || 'Calendar'} size={30} /></span>
                     <div className="timeline-event-name" style={isKSS ? { color: '#a855f7' } : {}}>{ev.name}</div>

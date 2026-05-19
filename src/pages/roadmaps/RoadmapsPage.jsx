@@ -5,6 +5,7 @@ import {
   Cloud, Smartphone, Shield, Book, FileText, CheckCircle 
 } from 'lucide-react';
 import { roadmapData } from '../../data/roadmapData';
+import BookmarkButton from '../../components/common/BookmarkButton';
 import '../../styles/roadmaps.css';
 
 const DOMAIN_ICONS = {
@@ -187,9 +188,15 @@ export default function RoadmapsPage({ onBack }) {
               onClick={() => setSelectedNode(null)} 
               className="panel-close-btn"
               aria-label="Close learning panel"
+              style={{ marginRight: '40px' }} // Shift slightly left to make room for BookmarkButton
             >
               &times;
             </button>
+
+            <BookmarkButton
+              item={{ id: `roadmap-${selectedNode.id}`, type: 'Roadmap', title: `${domainData.title}: ${selectedNode.label}` }}
+              style={{ position: 'absolute', top: '16px', right: '16px', zIndex: 20 }}
+            />
 
             <div className="panel-inner-scroll">
               {/* Header */}

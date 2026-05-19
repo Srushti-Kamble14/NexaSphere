@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { activities } from '../../data/activitiesData';
 import { activityPages } from '../../data/activities/index';
 import { DynamicIcon } from '../../shared/Icons';
+import BookmarkButton from '../../components/common/BookmarkButton';
 
 /* Anti-gravity delays — same pattern as team cards */
 const AG_DELAYS = [0, -2.1, -4.2, -1.0, -3.3, -5.5, -0.7, -6.1];
@@ -54,12 +55,17 @@ function ActivityCard({ a, idx, onNav }) {
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        minHeight: '420px'
+        minHeight: '420px',
+        position: 'relative'
       }}
       onMouseMove={hasContent ? onMove : undefined}
       onMouseLeave={hasContent ? onLeave : undefined}
       onClick={click}
     >
+      <BookmarkButton
+        item={{ id: `activity-${a.id}`, type: 'Activity', title: a.title }}
+        style={{ position: 'absolute', top: '12px', right: '12px', zIndex: 20 }}
+      />
       <div className="card-accent-line" style={{ background: color }}/>
       <div className="card-num" style={{ color: `${color}80` }}>{String(idx + 1).padStart(2, '0')}</div>
       <div className="activity-icon" style={{ color: color, marginBottom: '6px' }}><DynamicIcon name={a.icon} size={34} /></div>

@@ -45,6 +45,9 @@ import nexasphereLogo      from './assets/images/logos/nexasphere-logo.png';
 import Terminal from './components/developer/Terminal';
 import { useDeveloperMode } from './hooks/useDeveloperMode';
 
+import { BookmarkProvider } from './context/BookmarkContext';
+import BookmarksDrawer from './components/bookmarks/BookmarksDrawer';
+
 const MNH = 88, DNH = 64;
 const TABS = ['Home','Activities','Events','Projects','Roadmaps','About','Team','Contact'];
 
@@ -186,6 +189,7 @@ export default function App() {
   const [theme,      setTheme]      = useState(() => localStorage.getItem('ns-theme') || 'dark');
   const [eventsData, setEventsData] = useState(fallbackEvents);
   const [searchOpen, setSearchOpen] = useState(false);   // ← Search state
+  const [bookmarksOpen, setBookmarksOpen] = useState(false);
   const { isOpen: isTerminalOpen, closeTerminal } = useDeveloperMode();
 
   useEffect(()=>{
@@ -378,7 +382,7 @@ export default function App() {
   const cur = page?.activityKey ? activityPages[page.activityKey] : null;
 
   return (
-    <>
+    <BookmarkProvider>
       {/* Chatbot – kept at very top */}
       <Chatbot />
 
@@ -401,6 +405,7 @@ export default function App() {
           theme={theme}
           onApply={openApply}
           onJoin={openJoin}
+          onToggleBookmarks={() => setBookmarksOpen(prev => !prev)}
         />
       )}
 
@@ -496,7 +501,18 @@ export default function App() {
         setTheme={setTheme} 
         onNavigate={onTab} 
       />
-    </>
+
+      {/* ── Bookmarks Drawer ── */}
+      <BookmarksDrawer
+        isOpen={bookmarksOpen}
+        onClose={() => setBookmarksOpen(false)}
+        onNavigate={(type) => {
+          if (type === 'Event') onTab('Events');
+          else if (type === 'Activity') onTab('Activities');
+          else if (type === 'Roadmap') onTab('Roadmaps');
+        }}
+      />
+    </BookmarkProvider>
   );
 }
 

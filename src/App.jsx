@@ -143,6 +143,14 @@ function Cursor() {
         orbRef.current.style.opacity = opacity;
       }
       if (trailRef.current) {
+        trailRef.current.style.left    = s.ox + 'px';
+        trailRef.current.style.top     = s.oy + s.floatY * 0.4 + 'px';
+        trailRef.current.style.opacity = s.visible ? (s.hovering ? 0 : 0.35) : 0;
+      }
+      if (glowRef.current) {
+        glowRef.current.style.left    = s.mx + 'px';
+        glowRef.current.style.top     = s.my + 'px';
+        glowRef.current.style.opacity = s.visible ? 1 : 0;
         trailRef.current.style.left = s.ox + 'px';
         trailRef.current.style.top = s.oy + s.floatY * 0.4 + 'px';
         trailRef.current.style.opacity = s.visible ? (s.hovering ? 0 : 0.35) : 0; 

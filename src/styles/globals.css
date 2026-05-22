@@ -54,7 +54,7 @@ img, svg { display: block; max-width: 100%; }
 button { cursor: none; font-family: 'Rajdhani', sans-serif; border: none; background: none; }
 button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
 
-.container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 28px; }
+.container { width: 100%; max-width: 1240px; margin: 0 auto; }
 .section   { padding: 100px 0; }
 
 .section-title {

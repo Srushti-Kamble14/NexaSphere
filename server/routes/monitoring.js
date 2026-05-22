@@ -3,20 +3,36 @@
  * Provides endpoints for dashboard and error tracking
  */
 
-const express = require("express");
+import express from "express";
 const router = express.Router();
-const { getMetrics } = require("../middleware/performanceMonitor");
-const {
+import { getMetrics } from "../middleware/performanceMonitor.js";
+import {
   getErrorStats,
   getRecentErrors,
   getEndpointErrors,
   getUserErrors,
-} = require("../services/errorTrackingService");
-const logger = require("../utils/logger");
+} from "../services/errorTrackingService.js";
+import logger from "../utils/logger.js";
+
+function requireMonitoringAuth(req, res, next) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+
+  const token = authHeader.slice(7).trim();
+  const expectedToken = process.env.MONITORING_API_TOKEN;
+
+  if (!expectedToken || token !== expectedToken) {
+    return res.status(403).json({ error: "Forbidden" });
+  }
+
+  next();
+}
 
 /**
  * GET /api/monitoring/health
- * Health check endpoint
+ * Health check endpoint — no auth required
  */
 router.get("/health", (req, res) => {
   res.status(200).json({
@@ -31,7 +47,7 @@ router.get("/health", (req, res) => {
  * GET /api/monitoring/metrics
  * Get current performance metrics
  */
-router.get("/metrics", (req, res) => {
+router.get("/metrics", requireMonitoringAuth, (req, res) => {
   try {
     const metrics = getMetrics();
 
@@ -53,7 +69,7 @@ router.get("/metrics", (req, res) => {
  * GET /api/monitoring/errors/stats
  * Get error statistics
  */
-router.get("/errors/stats", (req, res) => {
+router.get("/errors/stats", requireMonitoringAuth, (req, res) => {
   try {
     const stats = getErrorStats();
 
@@ -76,7 +92,7 @@ router.get("/errors/stats", (req, res) => {
  * Get recent errors
  * Query params: limit (default 50)
  */
-router.get("/errors/recent", (req, res) => {
+router.get("/errors/recent", requireMonitoringAuth, (req, res) => {
   try {
     const limit = Math.min(parseInt(req.query.limit) || 50, 1000);
     const errors = getRecentErrors(limit);
@@ -100,7 +116,7 @@ router.get("/errors/recent", (req, res) => {
  * GET /api/monitoring/errors/endpoint/:endpoint
  * Get errors for specific endpoint
  */
-router.get("/errors/endpoint", (req, res) => {
+router.get("/errors/endpoint", requireMonitoringAuth, (req, res) => {
   try {
     const endpoint = req.query.url;
 
@@ -134,7 +150,7 @@ router.get("/errors/endpoint", (req, res) => {
  * GET /api/monitoring/errors/user/:userId
  * Get errors for specific user
  */
-router.get("/errors/user/:userId", (req, res) => {
+router.get("/errors/user/:userId", requireMonitoringAuth, (req, res) => {
   try {
     const { userId } = req.params;
     const limit = Math.min(parseInt(req.query.limit) || 20, 1000);
@@ -161,12 +177,11 @@ router.get("/errors/user/:userId", (req, res) => {
  * Get application logs
  * Query params: level, limit
  */
-router.get("/logs", (req, res) => {
+router.get("/logs", requireMonitoringAuth, (req, res) => {
   try {
     const level = req.query.level || "all";
     const limit = Math.min(parseInt(req.query.limit) || 100, 1000);
 
-    // For now, return a message about how to access logs
     res.status(200).json({
       success: true,
       message: "Logs are available in server/logs/combined.log",
@@ -191,7 +206,7 @@ router.get("/logs", (req, res) => {
  * Test endpoint for triggering an error
  * For development/testing only
  */
-router.post("/test-error", (req, res, next) => {
+router.post("/test-error", requireMonitoringAuth, (req, res, next) => {
   if (process.env.NODE_ENV === "production") {
     return res.status(403).json({
       success: false,
@@ -207,4 +222,4 @@ router.post("/test-error", (req, res, next) => {
   next(testError);
 });
 
-module.exports = router;
+export default router;

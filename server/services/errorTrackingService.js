@@ -3,8 +3,8 @@
  * Manages error logging, tracking, and analysis
  */
 
-const logger = require("../utils/logger");
-const { captureException, captureMessage, addBreadcrumb } = require("../utils/sentry");
+import logger from "../utils/logger.js";
+import { captureException, captureMessage, addBreadcrumb } from "../utils/sentry.js";
 
 // In-memory error store (consider using database in production)
 const errorStore = {
@@ -153,19 +153,38 @@ function getUserErrors(userId, limit = 20) {
 
 /**
  * Sanitize sensitive data from request body
+ * Uses pattern matching to catch variations like adminPassword, refreshToken, etc.
  * @param {Object} data - Request data
  */
 function sanitizeData(data) {
   if (!data) return null;
 
   const sanitized = { ...data };
-  const sensitiveFields = ["password", "token", "secret", "apiKey", "credit_card"];
+  const sensitivePatterns = [
+    /password/i,
+    /passwd/i,
+    /pwd/i,
+    /token/i,
+    /secret/i,
+    /apikey/i,
+    /api_key/i,
+    /credit.?card/i,
+    /cc.?number/i,
+    /card.?number/i,
+    /ssn/i,
+    /social.?security/i,
+    /private.?key/i,
+    /access.?key/i,
+  ];
 
-  sensitiveFields.forEach((field) => {
-    if (sanitized[field]) {
-      sanitized[field] = "***REDACTED***";
+  for (const key of Object.keys(sanitized)) {
+    for (const pattern of sensitivePatterns) {
+      if (pattern.test(key)) {
+        sanitized[key] = "***REDACTED***";
+        break;
+      }
     }
-  });
+  }
 
   return sanitized;
 }
@@ -178,7 +197,17 @@ function sanitizeHeaders(headers) {
   if (!headers) return null;
 
   const sanitized = { ...headers };
-  const sensitiveHeaders = ["authorization", "cookie", "x-api-key"];
+  const sensitiveHeaders = [
+    "authorization",
+    "cookie",
+    "x-api-key",
+    "x-csrf-token",
+    "x-session-id",
+    "x-auth-token",
+    "x-access-token",
+    "x-refresh-token",
+    "set-cookie",
+  ];
 
   sensitiveHeaders.forEach((header) => {
     if (sanitized[header.toLowerCase()]) {
@@ -211,7 +240,7 @@ function clearErrors() {
   errorStore.errorsByEndpoint = {};
 }
 
-module.exports = {
+export {
   logError,
   getErrorStats,
   getRecentErrors,

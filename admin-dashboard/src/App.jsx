@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate, Outlet } from 'react-router-dom';
 import { Sidebar } from './components/Sidebar';
 import { Toast } from './components/Toast';
+import { OfflineBanner } from './components/OfflineBanner';
 import { LoginPage } from './pages/LoginPage';
 import { DashboardHome } from './pages/DashboardHome';
 import { EventsManager } from './pages/EventsManager';
@@ -31,6 +32,7 @@ function RequireAuth() {
 function DashboardLayout() {
   return (
     <div className="app-layout">
+      <OfflineBanner />
       <Sidebar />
       <main className="main-content">
         <Outlet />

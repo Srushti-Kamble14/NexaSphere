@@ -9,24 +9,29 @@
  *   2.  Go to  Extensions → Apps Script
  *   3.  Your project should be named  "NexaSphere Membership"
  *   4.  Delete everything in Code.gs and paste THIS file.
- *   5.  Click  Deploy → New deployment → Web App
+ *   5.  Set the secret token:
+ *         File → Project properties → Script properties
+ *         Add key: MEMBERSHIP_SECRET  value: <your-strong-secret>
+ *   6.  Click  Deploy → New deployment → Web App
  *           Execute as  : Me
  *           Who can access : Anyone
- *   6.  Click  Authorise  when prompted (allow Spreadsheet access).
- *   7.  Copy the Web App URL that appears after deployment.
- *   8.  Paste that URL into  MembershipPage.jsx  at the top:
- *
- *           const MEMBERSHIP_SCRIPT_URL = 'https://script.google.com/macros/s/AKfy.../exec';
- *
- *       OR add it to your .env file:
- *           VITE_MEMBERSHIP_SCRIPT_URL=https://script.google.com/macros/s/AKfy.../exec
+ *   7.  Click  Authorise  when prompted (allow Spreadsheet access).
+ *   8.  Copy the Web App URL that appears after deployment.
+ *   9.  Add to your SERVER .env file (NOT client-side):
+ *         MEMBERSHIP_SCRIPT_URL=https://script.google.com/macros/s/AKfy.../exec
+ *         MEMBERSHIP_SECRET=<your-strong-secret>
  *
  * SHEET STRUCTURE:
  *   The script will automatically create a tab called "Membership" inside
  *   your spreadsheet with a styled, frozen header row the first time it runs.
  *   You do NOT need to create the tab manually.
  *
- * The spreadsheet is the one this script is BOUND to (opened from Extensions → Apps Script).
+ * SECURITY:
+ *   The secret token is stored in Script Properties (server-side only).
+ *   Admin requests must include the token in the POST body with action: 'getResponses'.
+ *   The secret is never exposed to client-side code.
+ *
+ * The spreadsheet is the one this script is bound to (opened from Extensions → Apps Script).
  */
 
 // ── CONFIG ────────────────────────────────────────────────────────────────────
@@ -93,16 +98,22 @@ function _styleHeader(sheet) {
   }
 }
 
-// ── POST handler (receives form submission from the website) ──────────────────
+// ── GET/POST handler — Fetch data for Admin Dashboard or health check ────────────────
+function doGet(e) {
+  return _respond({
+    ok: true,
+    service: 'NexaSphere Membership API',
+    version: '1.1',
+    sheet: SHEET_TAB_NAME,
+    status: 'Ready'
+  });
+}
+
 function doPost(e) {
   try {
-    // The website sends the payload as plain-text JSON (required for no-cors mode).
     var raw = '';
     if (e && e.postData && e.postData.contents) {
       raw = e.postData.contents;
-    } else if (e && e.parameter) {
-      // Fallback: form-encoded params
-      raw = JSON.stringify(e.parameter);
     }
 
     if (!raw) {
@@ -110,27 +121,63 @@ function doPost(e) {
     }
 
     var data = JSON.parse(raw);
-    var now  = new Date().toISOString();
 
+    // Handle admin requests (getResponses) with token verification
+    if (data.action === 'getResponses') {
+      var token = data.token;
+      var SECRET_TOKEN = PropertiesService.getScriptProperties().getProperty('MEMBERSHIP_SECRET');
+
+      if (!SECRET_TOKEN || token !== SECRET_TOKEN) {
+        return _respond({ ok: false, error: 'Unauthorized' });
+      }
+
+      try {
+        var sheet = getOrCreateSheet();
+        var rows = sheet.getDataRange().getValues();
+        var headers = rows[0];
+        var responses = [];
+
+        for (var i = 1; i < rows.length; i++) {
+          var obj = {};
+          for (var j = 0; j < headers.length; j++) {
+            var key = headers[j].toString().toLowerCase()
+              .replace(/[^a-z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
+              .replace(/[^a-z0-9]/gi, '');
+            obj[key] = rows[i][j];
+          }
+          responses.push(obj);
+        }
+
+        return _respond({
+          ok: true,
+          count: responses.length,
+          responses: responses
+        });
+      } catch (err) {
+        return _respond({ ok: false, error: err.message });
+      }
+    }
+
+    // Handle form submissions (original behavior)
+    var now  = new Date().toISOString();
     var sheet = getOrCreateSheet();
 
     var row = [
-      now,                                                              // Timestamp (server)
-      data.fullName    || '',                                           // Full Name
-      data.collegeEmail|| '',                                           // College Email
-      data.rollNumber  || '',                                           // University Roll Number
-      data.course      || '',                                           // Course
-      data.branch      || '',                                           // Branch
-      data.section     || '',                                           // Section
-      data.semester    || '',                                           // Semester
-      data.whatsapp    || '',                                           // WhatsApp Number
-      // groups may be a pre-joined string from MembershipPage.jsx
+      now,
+      data.fullName    || '',
+      data.collegeEmail|| '',
+      data.rollNumber  || '',
+      data.course      || '',
+      data.branch      || '',
+      data.section     || '',
+      data.semester    || '',
+      data.whatsapp    || '',
       Array.isArray(data.groups)
         ? data.groups.join(', ')
-        : (data.groups || ''),                                          // Groups Selected
-      data.whyJoin     || '',                                           // Why Join NexaSphere
-      data.submittedAt || now,                                          // Submitted At (client)
-      data.userAgent   || '',                                           // User Agent
+        : (data.groups || ''),
+      data.whyJoin     || '',
+      data.submittedAt || now,
+      data.userAgent   || '',
     ];
 
     sheet.appendRow(row);
@@ -140,51 +187,6 @@ function doPost(e) {
   } catch (err) {
     return _respond({ ok: false, error: err.message });
   }
-}
-
-// ── GET handler — Fetch data for Admin Dashboard or health check ────────────────
-function doGet(e) {
-  var token = e.parameter.token;
-  var SECRET_TOKEN = 'NEXA_SECRET_2026'; // Match this in your Admin Dashboard .env
-
-  if (token === SECRET_TOKEN) {
-    try {
-      var sheet = getOrCreateSheet();
-      var rows = sheet.getDataRange().getValues();
-      var headers = rows[0];
-      var data = [];
-
-      // Skip header row and convert rows to objects
-      for (var i = 1; i < rows.length; i++) {
-        var obj = {};
-        for (var j = 0; j < headers.length; j++) {
-          // Create camelCase keys from headers (e.g. "Full Name" -> "fullName")
-          var key = headers[j].toString().toLowerCase()
-            .replace(/[^a-z0-9]+(.)/g, (m, chr) => chr.toUpperCase())
-            .replace(/[^a-z0-9]/gi, '');
-          obj[key] = rows[i][j];
-        }
-        data.push(obj);
-      }
-
-      return _respond({
-        ok: true,
-        count: data.length,
-        responses: data
-      });
-    } catch (err) {
-      return _respond({ ok: false, error: err.message });
-    }
-  }
-
-  // Default health check response
-  return _respond({
-    ok: true,
-    service: 'NexaSphere Membership API',
-    version: '1.1',
-    sheet: SHEET_TAB_NAME,
-    status: 'Ready'
-  });
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────

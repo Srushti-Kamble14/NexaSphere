@@ -2,6 +2,11 @@ const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080';
 const TOKEN_KEY = 'ns_admin_token';
 const EMAIL_KEY = 'ns_admin_email';
 const EXPIRY_KEY = 'ns_admin_token_expiry';
+const OFFLINE_FLAG_KEY = 'ns_offline_mode';
+
+function generateMockToken() {
+  return `offline-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
 
 export const auth = {
   async login(email, password) {

@@ -53,9 +53,24 @@ button, a { touch-action: manipulation; -webkit-tap-highlight-color: transparent
 .container { width: 100%; max-width: 1240px; margin: 0 auto; padding: 0 28px; }
 .section   { padding: 100px 0; }
 
+.section-heading {
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
 .section-title {
   font-size: clamp(1.8rem, 4.5vw, 2.8rem);
+  width: 100%;
+  max-width: 100%;
   text-align: center;
+  align-self: stretch;
+  margin-left: auto;
+  margin-right: auto;
   margin-bottom: 10px;
   background: linear-gradient(135deg, var(--c1) 0%, var(--c2) 60%, var(--c3) 100%);
   -webkit-background-clip: text;

@@ -122,7 +122,7 @@ export default function ActivitiesSection({ onNavigate }) {
   return (
     <section className="section" id="section-activities">
       <div className="container">
-        <div className="reveal-stagger">
+        <div className="section-heading reveal-stagger">
           <h2 className="section-title pop-word">Our Activities</h2>
           <p className="section-subtitle pop-in" style={{ animationDelay: '.1s' }}>
             Click any activity to explore sessions &amp; events

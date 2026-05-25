@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Bell, MessageCircle, Users, AtSign, Settings, X, CheckCheck, Trash2 } from 'lucide-react';
+import { MessageCircle, Users, AtSign, Settings, X, CheckCheck, Trash2 } from 'lucide-react';
 import { useNotifications } from '../hooks/useNotifications';
 
 const TYPE_CONFIG = {
@@ -72,8 +72,12 @@ export default function NotificationBell() {
         <motion.div
           animate={unreadCount > 0 ? { rotate: [0, -15, 15, -10, 10, 0] } : {}}
           transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 4 }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}
         >
-          <Bell size={20} />
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+            <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+          </svg>
         </motion.div>
 
         {/* Unread badge */}
@@ -131,7 +135,10 @@ export default function NotificationBell() {
               borderBottom: '1px solid rgba(255,255,255,0.07)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Bell size={16} color="var(--c1)" />
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--c1)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
                 <span style={{ fontWeight: 700, fontSize: '0.95rem', color: 'var(--t1)' }}>
                   Notifications
                 </span>
@@ -201,7 +208,10 @@ export default function NotificationBell() {
                 <div style={{
                   padding: '44px 20px', textAlign: 'center', color: 'var(--t2)',
                 }}>
-                  <Bell size={32} color="rgba(204,17,17,0.3)" style={{ marginBottom: '10px' }} />
+                  <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="rgba(204,17,17,0.3)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ marginBottom: '10px' }}>
+                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                  </svg>
                   <div style={{ fontSize: '0.9rem' }}>No notifications yet</div>
                 </div>
               ) : (

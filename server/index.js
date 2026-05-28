@@ -17,11 +17,12 @@ import { initializeSocketIO, emitToRoom, getRoom } from "./config/socket.js";
 import adminStreamRouter from "./routes/adminStream.js";
 import { broadcastSSEEvent } from "./services/sseService.js";
 import rateLimit from "express-rate-limit";
-import { formRateLimiter } from "./middleware/rateLimiter.js";
 import {
   apiRateLimiter,
   authRateLimiter,
   notificationRateLimiter,
+  formRateLimiter,
+  activityAuthRateLimiter,
 } from "./middleware/rateLimiter.js";
 
 import { portfolioRepository } from "./repositories/portfolioRepository.js";
@@ -298,9 +299,73 @@ function normalizePhone(value) {
   return String(value || "").replace(/[^\d]/g, "");
 }
 
+// Constant-time string comparison that does not short-circuit on the first
+// mismatched character. Both operands are encoded to UTF-8 Buffers of equal
+// length before the comparison so response time is independent of how many
+// leading characters match. Returns false immediately if either value is empty,
+// so callers cannot exploit a zero-length buffer edge case.
+function timingSafeStringEqual(a, b) {
+  const sa = String(a ?? "");
+  const sb = String(b ?? "");
+  if (!sa.length || !sb.length) return sa === sb;
+  const ba = Buffer.from(sa, "utf8");
+  const bb = Buffer.from(sb, "utf8");
+  // Buffers must be the same byte length for timingSafeEqual. Pad the shorter
+  // one so the comparison always runs the full loop.
+  if (ba.length !== bb.length) {
+    const maxLen = Math.max(ba.length, bb.length);
+    const paddedA = Buffer.alloc(maxLen);
+    const paddedB = Buffer.alloc(maxLen);
+    ba.copy(paddedA);
+    bb.copy(paddedB);
+    // The length mismatch already means they cannot be equal, but we still run
+    // the full comparison so the execution time is data-independent.
+    crypto.timingSafeEqual(paddedA, paddedB);
+    return false;
+  }
+  return crypto.timingSafeEqual(ba, bb);
+}
+
+// Per-IP failed-attempt tracking for the activity-event auth endpoints.
+// Mirrors the passkey lockout pattern used for portfolio mutations below.
+const failedActivityAuthAttempts = new Map();
+const ACTIVITY_AUTH_MAX_ATTEMPTS = 5;
+const ACTIVITY_AUTH_LOCKOUT_MS = 15 * 60 * 1000;
+
+function checkActivityAuthLockout(ip) {
+  const entry = failedActivityAuthAttempts.get(ip);
+  if (!entry) return null;
+  if (Date.now() > entry.lockoutUntil) {
+    failedActivityAuthAttempts.delete(ip);
+    return null;
+  }
+  return entry;
+}
+
+function recordFailedActivityAuth(ip) {
+  const entry = failedActivityAuthAttempts.get(ip) || {
+    count: 0,
+    lockoutUntil: 0,
+  };
+  entry.count += 1;
+  if (entry.count >= ACTIVITY_AUTH_MAX_ATTEMPTS) {
+    entry.lockoutUntil = Date.now() + ACTIVITY_AUTH_LOCKOUT_MS;
+    entry.count = 0;
+  }
+  failedActivityAuthAttempts.set(ip, entry);
+  return entry;
+}
+
+function clearActivityAuthAttempts(ip) {
+  failedActivityAuthAttempts.delete(ip);
+}
+
 async function canManageActivityEvent({ name, email, phone, password }) {
   const expectedPassword = process.env.ADMIN_EVENT_PASSWORD;
-  if (String(password || "") !== expectedPassword) return false;
+  // Use constant-time comparison to prevent timing-based password recovery.
+  if (!timingSafeStringEqual(String(password ?? ""), expectedPassword)) {
+    return false;
+  }
   const n = String(name || "")
     .trim()
     .toLowerCase();
@@ -763,10 +828,21 @@ app.get("/api/content/activity-events/:activityKey", async (req, res) => {
   }
 });
 
-app.post("/api/content/activity-events/:activityKey", async (req, res) => {
+app.post("/api/content/activity-events/:activityKey", activityAuthRateLimiter, async (req, res) => {
   try {
     const activityKey = toSafeString(req.params.activityKey, 80);
     const body = req.body || {};
+    const ip = String(req.ip || req.headers["x-forwarded-for"] || "unknown")
+      .split(",")[0]
+      .trim();
+
+    const lockout = checkActivityAuthLockout(ip);
+    if (lockout) {
+      return res.status(429).json({
+        error: "Too many failed attempts. Please try again later.",
+      });
+    }
+
     const auth = {
       name: body.name,
       email: body.email,
@@ -774,12 +850,14 @@ app.post("/api/content/activity-events/:activityKey", async (req, res) => {
       password: body.password,
     };
     if (!(await canManageActivityEvent(auth))) {
+      recordFailedActivityAuth(ip);
       return res
         .status(401)
         .json({
           error: "Unauthorized. Core team details or password did not match.",
         });
     }
+    clearActivityAuthAttempts(ip);
 
     const event = {
       id: `manual-${Date.now()}`,
@@ -812,11 +890,23 @@ app.post("/api/content/activity-events/:activityKey", async (req, res) => {
 
 app.delete(
   "/api/content/activity-events/:activityKey/:eventId",
+  activityAuthRateLimiter,
   async (req, res) => {
     try {
       const activityKey = toSafeString(req.params.activityKey, 80);
       const eventId = toSafeString(req.params.eventId, 120);
       const body = req.body || {};
+      const ip = String(req.ip || req.headers["x-forwarded-for"] || "unknown")
+        .split(",")[0]
+        .trim();
+
+      const lockout = checkActivityAuthLockout(ip);
+      if (lockout) {
+        return res.status(429).json({
+          error: "Too many failed attempts. Please try again later.",
+        });
+      }
+
       const auth = {
         name: body.name,
         email: body.email,
@@ -824,12 +914,14 @@ app.delete(
         password: body.password,
       };
       if (!(await canManageActivityEvent(auth))) {
+        recordFailedActivityAuth(ip);
         return res
           .status(401)
           .json({
             error: "Unauthorized. Core team details or password did not match.",
           });
       }
+      clearActivityAuthAttempts(ip);
 
       const deleted = await deleteActivityEventStore(activityKey, eventId);
       if (!deleted)

@@ -1,3 +1,24 @@
+/**
+ * admin-dashboard/src/services/api.js
+ *
+ * DATA SOURCE ARCHITECTURE — two-tier read model
+ * ─────────────────────────────────────────────────────────────────────
+ * OFFLINE MODE  (VITE_API_BASE is empty)
+ *   Both admin dashboard and frontend read/write from browser localStorage
+ *   under the keys:  ns_db_events, ns_db_core_team, ns_db_membership
+ *   Changes in admin dashboard are immediately visible on the same device.
+ *
+ * ONLINE MODE  (VITE_API_BASE is set to the backend URL)
+ *   Admin dashboard:  calls /api/admin/* endpoints (authenticated)
+ *   Frontend:         calls /api/content/* endpoints (public read-only)
+ *   localStorage is ONLY used as a fallback if the API is unreachable.
+ *
+ * MEMBERSHIP RESPONSES
+ *   Read from VITE_MEMBERSHIP_SCRIPT_URL (Google Apps Script) in the admin.
+ *   The frontend writes to the same GAS endpoint via POST.
+ *   If VITE_MEMBERSHIP_SCRIPT_URL is empty the admin shows an offline banner.
+ * ─────────────────────────────────────────────────────────────────────
+ */
 import { eventEmitter, EVENTS } from "./eventEmitter";
 import { auth } from "./auth";
 
@@ -22,19 +43,29 @@ const vikasImg = teamImg("vikas.png");
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:8080";
 
-// Migration: If user has old 3-member seed OR fake photos, upgrade to full official 12-member seed
+// Migration: upgrade pre-v2 localStorage seed to the full 12-member official team.
+// Uses a version key so migrations are idempotent — they run exactly once per browser.
+// If the schema version is already >= 2, skip entirely to avoid touching real data.
+const SCHEMA_VERSION = 2;
 try {
-  const oldTeamRaw = localStorage.getItem("ns_db_core_team");
-  if (oldTeamRaw) {
-    const oldTeam = JSON.parse(oldTeamRaw);
-    const hasFakePhotos =
-      oldTeam.length > 0 &&
-      typeof oldTeam[0].photo === "string" &&
-      oldTeam[0].photo.startsWith("http");
-    if (oldTeam.length === 3 || hasFakePhotos) {
-      localStorage.removeItem("ns_db_core_team");
-      localStorage.removeItem("ns_db_events");
+  const currentVersion = parseInt(
+    localStorage.getItem("ns_db_schema_version") || "0",
+    10
+  );
+  if (currentVersion < SCHEMA_VERSION) {
+    const oldTeamRaw = localStorage.getItem("ns_db_core_team");
+    if (oldTeamRaw) {
+      const oldTeam = JSON.parse(oldTeamRaw);
+      const hasFakePhotos =
+        oldTeam.length > 0 &&
+        typeof oldTeam[0].photo === "string" &&
+        oldTeam[0].photo.startsWith("http://via.placeholder");
+      if (oldTeam.length === 3 && hasFakePhotos) {
+        localStorage.removeItem("ns_db_core_team");
+        localStorage.removeItem("ns_db_events");
+      }
     }
+    localStorage.setItem("ns_db_schema_version", String(SCHEMA_VERSION));
   }
 } catch (e) {
   if (import.meta.env.DEV) console.error("Migration failed", e);
@@ -178,12 +209,14 @@ async function fetchWithAuth(url, options = {}) {
   const isOffline = auth.isOfflineMode();
 
   if (!isOffline) {
+    // --- ONLINE: real API call ---
     try {
       const res = await fetch(`${API_BASE}${url}`, {
         ...options,
         credentials: 'include',
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${auth.getToken()}`,
           ...options.headers,
         },
       });
@@ -453,3 +486,5 @@ export const api = {
     getAll: () => fetchWithAuth("/api/admin/membership"),
   },
 };
+
+export { auth, eventEmitter, EVENTS };

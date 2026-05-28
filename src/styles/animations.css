@@ -19,7 +19,7 @@
 @keyframes popRight   { from{opacity:0;transform:translateX(72px) scale(.95)} to{opacity:1;transform:none} }
 @keyframes scaleReveal{ from{opacity:0;transform:scale(.82) translateY(20px)} to{opacity:1;transform:none} }
 @keyframes cardFlip   { from{opacity:0;transform:perspective(800px) rotateX(-32deg) translateY(36px)} to{opacity:1;transform:none} }
-@keyframes wordReveal { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:none;filter:blur(0)} }
+@keyframes wordReveal { from{opacity:0;transform:translateY(32px)} to{opacity:1;transform:none} }
 @keyframes numPop     { 0%{opacity:0;transform:scale(.5) translateY(18px)} 70%{transform:scale(1.12) translateY(-3px)} 100%{opacity:1;transform:none} }
 
 @keyframes cinLetterIn  { from{opacity:0;transform:translateY(-52px) rotateX(90deg) scale(.5)} to{opacity:1;transform:none} }
@@ -104,7 +104,11 @@
   66%     { transform:translate(-20px,15px) scale(0.9);  opacity:.05; }
 }
 
-.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-word,.pop-num { opacity:0; will-change:transform,opacity; }
+.pop-in,.pop-left,.pop-right,.pop-scale,.pop-flip,.pop-num { opacity:0; will-change:transform,opacity; }
+/* pop-word intentionally has NO will-change — combining will-change with
+   background-clip:text on the same element breaks GPU compositing in Chrome/WebKit,
+   causing the gradient to render as a solid rectangle instead of clipping to text. */
+.pop-word { opacity:0; }
 .pop-in.fired    { animation:popIn       .72s cubic-bezier(.22,1,.36,1) forwards; }
 .pop-left.fired  { animation:popLeft     .72s cubic-bezier(.22,1,.36,1) forwards; }
 .pop-right.fired { animation:popRight    .72s cubic-bezier(.22,1,.36,1) forwards; }
@@ -165,4 +169,26 @@
   transition: color .3s cubic-bezier(.4,0,.2,1) !important;
 }
 
+/* ── Glitch text effect (ActivityDetailPage) ── */
+@keyframes glitch1 { 0%{transform:translateX(-3px)} 50%{transform:translateX(3px)} 100%{transform:translateX(-3px)} }
+@keyframes glitch2 { 0%{transform:translateX(3px)} 50%{transform:translateX(-3px)} 100%{transform:translateX(3px)} }
 
+.glitch-text::before, .glitch-text::after {
+  content: attr(data-text);
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0;
+}
+.glitch-text:hover::before {
+  opacity: 0.7; color: #ff0080;
+  clip-path: polygon(0 20%, 100% 20%, 100% 40%, 0 40%);
+  transform: translateX(-3px);
+  animation: glitch1 0.3s steps(2) infinite;
+}
+.glitch-text:hover::after {
+  opacity: 0.7; color: #00ffff;
+  clip-path: polygon(0 60%, 100% 60%, 100% 80%, 0 80%);
+  transform: translateX(3px);
+  animation: glitch2 0.3s steps(2) infinite;
+}

@@ -1,35 +1,43 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
-import { useRoadmapBuilder } from '../../hooks/useRoadmapBuilder';
-import { X, Plus, Trash2, Globe, Link, CheckSquare, ListPlus } from 'lucide-react';
+import React, { useEffect, useRef, useState } from "react";
+import { motion } from "framer-motion";
+import { useRoadmapBuilder } from "../../hooks/useRoadmapBuilder";
+import {
+  X,
+  Plus,
+  Trash2,
+  Globe,
+  Link,
+  CheckSquare,
+  ListPlus,
+} from "lucide-react";
 
 interface NodeModalProps {
-  theme: 'dark' | 'light';
+  theme: "dark" | "light";
 }
 
 export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
-  const {
-    nodes,
-    selectedNodeId,
-    setSelectedNodeId,
-    updateNode
-  } = useRoadmapBuilder();
+  const { nodes, selectedNodeId, setSelectedNodeId, updateNode } =
+    useRoadmapBuilder();
 
   // Reference the active node details
-  const node = nodes.find(n => n.id === selectedNodeId);
+  const node = nodes.find((n) => n.id === selectedNodeId);
 
   // Form states
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [status, setStatus] = useState<'Not Started' | 'In Progress' | 'Completed' | 'Stuck'>('Not Started');
-  const [notes, setNotes] = useState('');
-  const [resources, setResources] = useState<{ title: string; url: string }[]>([]);
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
+  const [status, setStatus] = useState<
+    "Not Started" | "In Progress" | "Completed" | "Stuck"
+  >("Not Started");
+  const [notes, setNotes] = useState("");
+  const [resources, setResources] = useState<{ title: string; url: string }[]>(
+    []
+  );
   const [prerequisites, setPrerequisites] = useState<string[]>([]);
 
   // Local helper states for adding resources
-  const [newResTitle, setNewResTitle] = useState('');
-  const [newResUrl, setNewResUrl] = useState('');
-  const [urlError, setUrlError] = useState('');
+  const [newResTitle, setNewResTitle] = useState("");
+  const [newResUrl, setNewResUrl] = useState("");
+  const [urlError, setUrlError] = useState("");
 
   const modalRef = useRef<HTMLDivElement>(null);
   const titleInputRef = useRef<HTMLInputElement>(null);
@@ -43,9 +51,9 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
       setNotes(node.notes);
       setResources(node.resources || []);
       setPrerequisites(node.prerequisites || []);
-      setNewResTitle('');
-      setNewResUrl('');
-      setUrlError('');
+      setNewResTitle("");
+      setNewResUrl("");
+      setUrlError("");
 
       // Auto focus title input on mount for accessibility
       setTimeout(() => {
@@ -57,17 +65,19 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
   // Trap focus inside modal & Escape key listener
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
+      if (e.key === "Escape") {
         setSelectedNodeId(null);
       }
 
       // Basic tab-loop focus trap
-      if (e.key === 'Tab' && modalRef.current) {
+      if (e.key === "Tab" && modalRef.current) {
         const focusableElements = modalRef.current.querySelectorAll(
           'a[href], area[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), button:not([disabled]), iframe, object, embed, [tabindex="0"], [contenteditable]'
         );
         const firstElement = focusableElements[0] as HTMLElement;
-        const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
 
         if (e.shiftKey) {
           if (document.activeElement === firstElement) {
@@ -84,10 +94,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
     };
 
     if (selectedNodeId) {
-      window.addEventListener('keydown', handleKeyDown);
+      window.addEventListener("keydown", handleKeyDown);
     }
 
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
   }, [selectedNodeId, setSelectedNodeId]);
 
   if (!selectedNodeId || !node) return null;
@@ -99,18 +109,21 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
     // Direct url validation check
     try {
       new URL(newResUrl);
-      setUrlError('');
+      setUrlError("");
     } catch (_) {
-      setUrlError('Please enter a valid URL (include http:// or https://)');
+      setUrlError("Please enter a valid URL (include http:// or https://)");
       return;
     }
 
-    const updatedResources = [...resources, { title: newResTitle.trim(), url: newResUrl.trim() }];
+    const updatedResources = [
+      ...resources,
+      { title: newResTitle.trim(), url: newResUrl.trim() },
+    ];
     setResources(updatedResources);
     updateNode(node.id, { resources: updatedResources });
 
-    setNewResTitle('');
-    setNewResUrl('');
+    setNewResTitle("");
+    setNewResUrl("");
   };
 
   const handleRemoveResource = (index: number) => {
@@ -123,12 +136,12 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
   const handlePrereqToggle = (targetId: string) => {
     let updatedPrereqs = [...prerequisites];
     if (updatedPrereqs.includes(targetId)) {
-      updatedPrereqs = updatedPrereqs.filter(id => id !== targetId);
+      updatedPrereqs = updatedPrereqs.filter((id) => id !== targetId);
     } else {
       // Cycle detection validation check
       const hasCycle = (source: string, target: string): boolean => {
         if (source === target) return true;
-        const targetNode = nodes.find(n => n.id === target);
+        const targetNode = nodes.find((n) => n.id === target);
         if (!targetNode) return false;
         for (const prereq of targetNode.prerequisites) {
           if (hasCycle(source, prereq)) return true;
@@ -137,7 +150,9 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
       };
 
       if (hasCycle(node.id, targetId)) {
-        alert('Invalid connection: checking this node will create a circular loop!');
+        setUrlError(
+          "Invalid connection: checking this node will create a circular loop."
+        );
         return;
       }
 
@@ -149,10 +164,14 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
 
   const getGlowStyle = () => {
     switch (status) {
-      case 'In Progress': return 'glowing-amber-modal';
-      case 'Completed': return 'glowing-emerald-modal';
-      case 'Stuck': return 'glowing-ruby-modal';
-      default: return '';
+      case "In Progress":
+        return "glowing-amber-modal";
+      case "Completed":
+        return "glowing-emerald-modal";
+      case "Stuck":
+        return "glowing-ruby-modal";
+      default:
+        return "";
     }
   };
 
@@ -161,15 +180,15 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
       className="modal-overlay"
       onClick={() => setSelectedNodeId(null)}
       style={{
-        position: 'fixed',
+        position: "fixed",
         inset: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.75)',
-        backdropFilter: 'blur(10px)',
+        backgroundColor: "rgba(0, 0, 0, 0.75)",
+        backdropFilter: "blur(10px)",
         zIndex: 10000,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px'
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        padding: "24px",
       }}
     >
       <motion.div
@@ -177,20 +196,21 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
         onClick={(e) => e.stopPropagation()}
         className={`modal-box glassmorphic-panel ${getGlowStyle()}`}
         style={{
-          width: '100%',
-          maxWidth: '680px',
-          maxHeight: '90vh',
-          borderRadius: '24px',
-          overflowY: 'auto',
-          position: 'relative',
-          padding: '36px',
-          backgroundColor: theme === 'dark' ? 'rgba(20, 20, 20, 0.95)' : '#FFFFFF',
-          border: '1px solid var(--bdr)'
+          width: "100%",
+          maxWidth: "680px",
+          maxHeight: "90vh",
+          borderRadius: "24px",
+          overflowY: "auto",
+          position: "relative",
+          padding: "36px",
+          backgroundColor:
+            theme === "dark" ? "rgba(20, 20, 20, 0.95)" : "#FFFFFF",
+          border: "1px solid var(--bdr)",
         }}
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         exit={{ scale: 0.9, opacity: 0, y: 20 }}
-        transition={{ type: 'spring', damping: 25, stiffness: 260 }}
+        transition={{ type: "spring", damping: 25, stiffness: 260 }}
         role="dialog"
         aria-modal="true"
         aria-labelledby="node-modal-title"
@@ -201,30 +221,39 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
           onClick={() => setSelectedNodeId(null)}
           aria-label="Close editing modal"
           style={{
-            position: 'absolute',
-            top: '24px',
-            right: '24px',
-            zIndex: 1000
+            position: "absolute",
+            top: "24px",
+            right: "24px",
+            zIndex: 1000,
           }}
         >
           <X size={20} />
         </button>
 
         {/* Modal Header */}
-        <div style={{ marginBottom: '28px' }}>
+        <div style={{ marginBottom: "28px" }}>
           <span className="text-xxs uppercase tracking-widest text-brand-red font-black">
             Interactive Editor
           </span>
-          <h2 id="node-modal-title" className="text-2xl font-black text-t1 mt-1 font-orbitron">
+          <h2
+            id="node-modal-title"
+            className="text-2xl font-black text-t1 mt-1 font-orbitron"
+          >
             Modify Learning Node
           </h2>
         </div>
 
         {/* Form Grid */}
-        <div className="modal-form-stack" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <div
+          className="modal-form-stack"
+          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
+        >
           {/* Node Title */}
           <div className="form-group">
-            <label htmlFor="node-title" className="form-label text-xs font-black uppercase text-t2 block mb-2">
+            <label
+              htmlFor="node-title"
+              className="form-label text-xs font-black uppercase text-t2 block mb-2"
+            >
               Topic/Title
             </label>
             <input
@@ -244,7 +273,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
 
           {/* Node Description */}
           <div className="form-group">
-            <label htmlFor="node-desc" className="form-label text-xs font-black uppercase text-t2 block mb-2">
+            <label
+              htmlFor="node-desc"
+              className="form-label text-xs font-black uppercase text-t2 block mb-2"
+            >
               Short Description
             </label>
             <textarea
@@ -265,22 +297,31 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
             <span className="form-label text-xs font-black uppercase text-t2 block mb-3">
               Learning Status
             </span>
-            <div className="status-grid-selector" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '12px' }}>
-              {(['Not Started', 'In Progress', 'Completed', 'Stuck'] as const).map((statusVal) => {
+            <div
+              className="status-grid-selector"
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(4, 1fr)",
+                gap: "12px",
+              }}
+            >
+              {(
+                ["Not Started", "In Progress", "Completed", "Stuck"] as const
+              ).map((statusVal) => {
                 const isActive = status === statusVal;
-                let colorClass = '';
+                let colorClass = "";
                 if (isActive) {
-                  if (statusVal === 'In Progress') colorClass = 'bg-amber';
-                  if (statusVal === 'Completed') colorClass = 'bg-emerald';
-                  if (statusVal === 'Stuck') colorClass = 'bg-ruby';
-                  if (statusVal === 'Not Started') colorClass = 'bg-slate';
+                  if (statusVal === "In Progress") colorClass = "bg-amber";
+                  if (statusVal === "Completed") colorClass = "bg-emerald";
+                  if (statusVal === "Stuck") colorClass = "bg-ruby";
+                  if (statusVal === "Not Started") colorClass = "bg-slate";
                 }
 
                 return (
                   <button
                     key={statusVal}
                     type="button"
-                    className={`status-select-btn ${isActive ? 'active ' + colorClass : ''}`}
+                    className={`status-select-btn ${isActive ? "active " + colorClass : ""}`}
                     onClick={() => {
                       setStatus(statusVal);
                       updateNode(node.id, { status: statusVal });
@@ -298,25 +339,46 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
             <label className="form-label text-xs font-black uppercase text-t2 block mb-2">
               Prerequisite Paths (Incoming Connections)
             </label>
-            <div className="prereq-selector-scroll glassmorphic-panel" style={{ maxHeight: '120px', overflowY: 'auto', padding: '12px', borderRadius: '12px' }}>
-              {nodes.filter(n => n.id !== node.id).length === 0 ? (
-                <p className="text-xxs text-t3 text-center py-2">No other nodes available to establish connections.</p>
+            <div
+              className="prereq-selector-scroll glassmorphic-panel"
+              style={{
+                maxHeight: "120px",
+                overflowY: "auto",
+                padding: "12px",
+                borderRadius: "12px",
+              }}
+            >
+              {nodes.filter((n) => n.id !== node.id).length === 0 ? (
+                <p className="text-xxs text-t3 text-center py-2">
+                  No other nodes available to establish connections.
+                </p>
               ) : (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  {nodes.filter(n => n.id !== node.id).map(otherNode => {
-                    const isChecked = prerequisites.includes(otherNode.id);
-                    return (
-                      <label key={otherNode.id} className="prereq-checkbox-row text-xs text-t2 flex items-center gap-2 cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => handlePrereqToggle(otherNode.id)}
-                          className="rounded-checkbox"
-                        />
-                        <span>{otherNode.title}</span>
-                      </label>
-                    );
-                  })}
+                <div
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    gap: "8px",
+                  }}
+                >
+                  {nodes
+                    .filter((n) => n.id !== node.id)
+                    .map((otherNode) => {
+                      const isChecked = prerequisites.includes(otherNode.id);
+                      return (
+                        <label
+                          key={otherNode.id}
+                          className="prereq-checkbox-row text-xs text-t2 flex items-center gap-2 cursor-pointer"
+                        >
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={() => handlePrereqToggle(otherNode.id)}
+                            className="rounded-checkbox"
+                          />
+                          <span>{otherNode.title}</span>
+                        </label>
+                      );
+                    })}
                 </div>
               )}
             </div>
@@ -327,7 +389,10 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
             <label className="form-label text-xs font-black uppercase text-t2 block mb-2">
               Recommended Resources &amp; Playgrounds
             </label>
-            <div className="resources-editor-stack" style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div
+              className="resources-editor-stack"
+              style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+            >
               {/* Add New resource layout */}
               <div className="add-resource-panel flex gap-2">
                 <input
@@ -354,19 +419,38 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
                 </button>
               </div>
 
-              {urlError && <p className="text-xxs text-brand-red font-bold mt-1"><AlertCircle size={10} style={{ display: 'inline', marginRight: '4px' }} />{urlError}</p>}
+              {urlError && (
+                <p className="text-xxs text-brand-red font-bold mt-1">
+                  <AlertCircle
+                    size={10}
+                    style={{ display: "inline", marginRight: "4px" }}
+                  />
+                  {urlError}
+                </p>
+              )}
 
               {/* Render resource cards stack */}
-              <div className="resource-list-stack mt-2" style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <div
+                className="resource-list-stack mt-2"
+                style={{ display: "flex", flexDirection: "column", gap: "8px" }}
+              >
                 {resources.map((res, index) => (
                   <div
                     key={index}
                     className="resource-item-edit-row glassmorphic-panel flex justify-between items-center text-xs"
-                    style={{ padding: '8px 14px', borderRadius: '8px' }}
+                    style={{ padding: "8px 14px", borderRadius: "8px" }}
                   >
                     <div className="flex items-center gap-2 truncate">
-                      <Globe size={12} className="text-brand-red flex-shrink-0" />
-                      <a href={res.url} target="_blank" rel="noopener noreferrer" className="font-bold text-t1 hover:underline truncate">
+                      <Globe
+                        size={12}
+                        className="text-brand-red flex-shrink-0"
+                      />
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="font-bold text-t1 hover:underline truncate"
+                      >
                         {res.title}
                       </a>
                     </div>
@@ -386,11 +470,23 @@ export const NodeModal: React.FC<NodeModalProps> = ({ theme }) => {
 
           {/* Notes and Personal Checklists */}
           <div className="form-group">
-            <div style={{ display: 'flex', justifyContent: 'between', alignItems: 'center', marginBottom: '8px' }}>
-              <label htmlFor="node-notes" className="form-label text-xs font-black uppercase text-t2 block">
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "between",
+                alignItems: "center",
+                marginBottom: "8px",
+              }}
+            >
+              <label
+                htmlFor="node-notes"
+                className="form-label text-xs font-black uppercase text-t2 block"
+              >
                 Personal Notes &amp; Checklist Items
               </label>
-              <span className="text-xxs text-t3">Supports Markdown list notation (- [ ] for checklists)</span>
+              <span className="text-xxs text-t3">
+                Supports Markdown list notation (- [ ] for checklists)
+              </span>
             </div>
             <textarea
               id="node-notes"

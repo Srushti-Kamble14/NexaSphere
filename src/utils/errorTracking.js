@@ -13,7 +13,7 @@ export const initializeSentry = (environment = import.meta.env.MODE) => {
   const isDevelopment = import.meta.env.DEV;
 
   Sentry.init({
-    dsn: import.meta.env.VITE_SENTRY_DSN || process.env.SENTRY_DSN,
+    dsn: import.meta.env.VITE_SENTRY_DSN,
     environment: environment,
     tracesSampleRate: isDevelopment ? 1.0 : 0.1, // 100% in dev, 10% in prod
     profilesSampleRate: isDevelopment ? 1.0 : 0.1,
@@ -96,7 +96,11 @@ export const setUserContext = (user) => {
  * @param {string} category - Category (e.g., "navigation", "action")
  * @param {string} level - Level (info, warning, error)
  */
-export const addBreadcrumb = (message, category = "user-action", level = "info") => {
+export const addBreadcrumb = (
+  message,
+  category = "user-action",
+  level = "info"
+) => {
   Sentry.addBreadcrumb({
     message,
     category,

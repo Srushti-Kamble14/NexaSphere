@@ -133,12 +133,8 @@
 
 [data-theme="dark"] .ns-footer,
 :not([data-theme]) .ns-footer {
-  background: linear-gradient(180deg,
-    rgba(4, 4, 7, 0)   0%,
-    rgba(6, 4, 12, .97) 25%,
-    rgba(5, 5, 9,  1)   100%
-  ) !important;
-  border-top: 1px solid rgba(139, 92, 246, .08) !important;
+  background: transparent !important;
+  border-top: 1px solid rgba(204, 17, 17, 0.1) !important;
 }
 
 [data-theme="dark"] #scroll-progress,
@@ -169,7 +165,7 @@
 [data-theme="light"] .timeline-card::before { display: none; }
 [data-theme="light"] .hero-logo-wrap::after { display: none; }
 
-[data-theme="light"] .ns-footer { background: rgba(245,245,248,.97) !important; border-top-color: rgba(0,0,0,.07) !important; }
+[data-theme="light"] .ns-footer { background: transparent !important; border-top-color: rgba(204, 17, 17, 0.08) !important; }
 [data-theme="light"] .modal-box { background: rgba(255,255,255,.92) !important; backdrop-filter: blur(24px) !important; -webkit-backdrop-filter: blur(24px) !important; }
 
 [data-theme="light"] .page-banner {

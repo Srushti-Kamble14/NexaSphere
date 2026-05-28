@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
-import { api } from '../services/api';
-import { Skeleton } from '../components/Skeleton';
-import { AdminIcon } from '../components/AdminIcon';
+import { useState, useEffect } from "react";
+import { api, auth } from "../services/api";
+import { Skeleton } from "../components/Skeleton";
+import { AdminIcon } from "../components/AdminIcon";
 
 export function DashboardHome() {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isOffline = auth.isOfflineMode();
 
   useEffect(() => {
     Promise.all([
@@ -16,12 +17,11 @@ export function DashboardHome() {
       const events = eventsData?.events ?? [];
       const team = teamData?.members ?? teamData ?? [];
       const applications = membershipData?.responses ?? [];
-      
       setStats({
         totalEvents: events.length,
-        upcomingEvents: events.filter(e => e.status === 'upcoming').length,
+        upcomingEvents: events.filter((e) => e.status === "upcoming").length,
         teamMembers: team.length,
-        totalApplications: applications.length
+        totalApplications: applications.length,
       });
       setLoading(false);
     });
@@ -30,6 +30,33 @@ export function DashboardHome() {
   return (
     <div className="page">
       <h2 className="page-title">Dashboard</h2>
+
+      {/* ── Offline mode banner ── */}
+      {isOffline && (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "10px",
+            background: "rgba(234,179,8,0.08)",
+            border: "1px solid rgba(234,179,8,0.3)",
+            borderRadius: "8px",
+            padding: "10px 16px",
+            marginBottom: "24px",
+            fontSize: "0.82rem",
+            color: "rgba(234,179,8,0.9)",
+          }}
+        >
+          <AdminIcon name="WifiOff" size={16} />
+          <span>
+            <strong>Offline Mode</strong> — Changes are stored in browser
+            localStorage only. Set <code>VITE_API_BASE</code> and{" "}
+            <code>VITE_MEMBERSHIP_SCRIPT_URL</code> to connect live data
+            sources.
+          </span>
+        </div>
+      )}
+
       {loading ? (
         <div className="stats-grid">
           <Skeleton height={100} count={3} />
@@ -37,35 +64,63 @@ export function DashboardHome() {
       ) : (
         <div className="stats-grid">
           <div className="stat-card">
-            <span className="stat-icon"><AdminIcon name="Calendar" size={28} /></span>
+            <span className="stat-icon">
+              <AdminIcon name="Calendar" size={28} />
+            </span>
             <div>
               <div className="stat-value">{stats.totalEvents}</div>
               <div className="stat-label">Total Events</div>
             </div>
           </div>
           <div className="stat-card">
-            <span className="stat-icon"><AdminIcon name="Users" size={28} /></span>
+            <span className="stat-icon">
+              <AdminIcon name="Users" size={28} />
+            </span>
             <div>
               <div className="stat-value">{stats.teamMembers}</div>
               <div className="stat-label">Core Team</div>
             </div>
           </div>
           <div className="stat-card">
-            <span className="stat-icon"><AdminIcon name="FileText" size={28} /></span>
+            <span className="stat-icon">
+              <AdminIcon name="FileText" size={28} />
+            </span>
             <div>
               <div className="stat-value">{stats.totalApplications}</div>
-              <div className="stat-label">Applications</div>
+              <div className="stat-label">
+                Applications
+                {isOffline && (
+                  <span
+                    style={{
+                      marginLeft: "6px",
+                      fontSize: "0.65rem",
+                      opacity: 0.6,
+                    }}
+                  >
+                    (offline)
+                  </span>
+                )}
+              </div>
             </div>
           </div>
         </div>
       )}
+
       <div className="quick-links">
         <h3>Quick Actions</h3>
         <div className="quick-grid">
-          <a href="/dashboard/events" className="quick-card"><AdminIcon name="Calendar" size={18} /> Events</a>
-          <a href="/dashboard/activity-events" className="quick-card"><AdminIcon name="Target" size={18} /> Activities</a>
-          <a href="/dashboard/core-team" className="quick-card"><AdminIcon name="Users" size={18} /> Team</a>
-          <a href="/dashboard/membership" className="quick-card"><AdminIcon name="FileText" size={18} /> Membership</a>
+          <a href="/dashboard/events" className="quick-card">
+            <AdminIcon name="Calendar" size={18} /> Events
+          </a>
+          <a href="/dashboard/activity-events" className="quick-card">
+            <AdminIcon name="Target" size={18} /> Activities
+          </a>
+          <a href="/dashboard/core-team" className="quick-card">
+            <AdminIcon name="Users" size={18} /> Team
+          </a>
+          <a href="/dashboard/membership" className="quick-card">
+            <AdminIcon name="FileText" size={18} /> Membership
+          </a>
         </div>
       </div>
     </div>

@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { activities } from "../../data/activitiesData";
 import { BannerOrbs } from "../../shared/MotionLayer";
-import Footer from '../../shared/Footer';
-import { DynamicIcon } from '../../shared/Icons';
+import Footer from "../../shared/Footer";
+import { DynamicIcon } from "../../shared/Icons";
 
 const activityDetails = {
   Hackathon: {
@@ -238,7 +238,7 @@ function ActivityCard({ a, idx, onNavigate }) {
                 borderRadius: "20px",
                 background: a.color ? `${a.color}18` : `var(--c1-18)`,
                 color: a.color || "var(--c1)",
-                border: `1px solid ${a.color ? a.color + '35' : 'var(--c1-35)'}`,
+                border: `1px solid ${a.color ? a.color + "35" : "var(--c1-35)"}`,
                 fontFamily: "'Space Mono', monospace",
                 fontWeight: 600,
                 transition: "transform .2s, background .2s",
@@ -272,7 +272,9 @@ function ActivityCard({ a, idx, onNavigate }) {
                 gap: "8px",
               }}
             >
-              <span style={{ color: a.color || "var(--c1)", fontWeight: 700 }}>→</span>{" "}
+              <span style={{ color: a.color || "var(--c1)", fontWeight: 700 }}>
+                →
+              </span>{" "}
               {h}
             </li>
           ))}
@@ -345,7 +347,7 @@ export default function ActivitiesPage({ onNavigate, onBack }) {
           }
         });
       },
-      { threshold: 0, rootMargin: "0px 0px -10px 0px" },
+      { threshold: 0, rootMargin: "0px 0px -10px 0px" }
     );
     document
       .querySelectorAll("#activities-page .pop-in, #activities-page .pop-word")
@@ -366,7 +368,8 @@ export default function ActivitiesPage({ onNavigate, onBack }) {
           borderBottom: "1px solid var(--bdr)",
           padding: "60px 0 50px",
           textAlign: "center",
-          marginBottom: "60px",
+          /* Normalized to 32px — matches EventsPage and ActivityDetailPage standard */
+          marginBottom: "32px",
           position: "relative",
           overflow: "hidden",
         }}
@@ -407,34 +410,28 @@ export default function ActivitiesPage({ onNavigate, onBack }) {
           ← Back
         </button>
 
-        <span
-          className="cin-section-label pop-in"
-          style={{ position: "relative", zIndex: 1 }}
-        >
-          NexaSphere · GL Bajaj
-        </span>
-        <h1
-          className="section-title pop-word"
-          style={{
-            fontSize: "clamp(2rem, 5vw, 3.2rem)",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          Our Activities
-        </h1>
-        <p
-          className="section-subtitle pop-in"
-          style={{
-            animationDelay: ".1s",
-            maxWidth: "580px",
-            margin: "0 auto",
-            position: "relative",
-            zIndex: 1,
-          }}
-        >
-          Every format is designed to sharpen a different skill. Explore what excites you — then dive in.
-        </p>
+        <div style={{ position: "relative", zIndex: 1 }}>
+          <span className="cin-section-label pop-in">
+            NexaSphere · GL Bajaj
+          </span>
+          <h1
+            className="section-title pop-word"
+            style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}
+          >
+            Our Activities
+          </h1>
+          <p
+            className="section-subtitle pop-in"
+            style={{
+              animationDelay: ".1s",
+              maxWidth: "580px",
+              margin: "0 auto",
+            }}
+          >
+            Every format is designed to sharpen a different skill. Explore what
+            excites you — then dive in.
+          </p>
+        </div>
       </div>
 
       <div className="container">

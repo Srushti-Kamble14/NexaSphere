@@ -1,14 +1,7 @@
-import React, {
-  useState,
-  useRef,
-  useCallback,
-  useEffect,
-  useReducer,
-  useMemo,
-} from "react";
-import { useSocketContext } from "../../context/SocketContext";
-import { useSocket } from "../../hooks/useSocket";
-import { Plus, AlertCircle, GripVertical } from "lucide-react";
+import React, { useState, useRef, useCallback, useEffect, useReducer, useMemo } from 'react';
+import { useSocketContext } from '../../context/SocketContext';
+import { useSocket } from '../../hooks/useSocket';
+import { Plus, AlertCircle, GripVertical } from 'lucide-react';
 
 interface User {
   id: string;
@@ -21,15 +14,15 @@ interface Task {
   id?: string;
   title: string;
   description?: string;
-  status: "Todo" | "In_Progress" | "Review" | "Done";
-  priority?: "Low" | "Medium" | "High";
+  status: 'Todo' | 'In_Progress' | 'Review' | 'Done';
+  priority?: 'Low' | 'Medium' | 'High';
   assignedTo?: { _id?: string; name?: string };
   dueDate?: string;
   createdAt?: string;
 }
 
 interface Column {
-  id: Task["status"];
+  id: Task['status'];
   title: string;
   border: string;
   headerBg: string;
@@ -42,45 +35,45 @@ interface KanbanState {
 }
 
 type KanbanAction =
-  | { type: "SET_TASKS"; payload: Task[] }
+  | { type: 'SET_TASKS'; payload: Task[] }
   | {
-      type: "OPTIMISTIC_MOVE";
-      payload: { taskId: string; status: Task["status"] };
+      type: 'OPTIMISTIC_MOVE';
+      payload: { taskId: string; status: Task['status'] };
     }
-  | { type: "CONFIRM" }
-  | { type: "ROLLBACK"; payload?: string }
-  | { type: "CLEAR_ERROR" }
-  | { type: "ADD_TASK"; payload: Task }
+  | { type: 'CONFIRM' }
+  | { type: 'ROLLBACK'; payload?: string }
+  | { type: 'CLEAR_ERROR' }
+  | { type: 'ADD_TASK'; payload: Task }
   | {
-      type: "UPDATE_TASK";
+      type: 'UPDATE_TASK';
       payload: Partial<Task> & { _id?: string; id?: string };
     }
-  | { type: "REMOVE_TASK"; payload: string };
+  | { type: 'REMOVE_TASK'; payload: string };
 
 const COLUMNS: Column[] = [
   {
-    id: "Todo",
-    title: "To Do",
-    border: "border-slate-500/30",
-    headerBg: "bg-slate-500",
+    id: 'Todo',
+    title: 'To Do',
+    border: 'border-slate-500/30',
+    headerBg: 'bg-slate-500',
   },
   {
-    id: "In_Progress",
-    title: "In Progress",
-    border: "border-blue-500/30",
-    headerBg: "bg-blue-500",
+    id: 'In_Progress',
+    title: 'In Progress',
+    border: 'border-blue-500/30',
+    headerBg: 'bg-blue-500',
   },
   {
-    id: "Review",
-    title: "Review",
-    border: "border-amber-500/30",
-    headerBg: "bg-amber-500",
+    id: 'Review',
+    title: 'Review',
+    border: 'border-amber-500/30',
+    headerBg: 'bg-amber-500',
   },
   {
-    id: "Done",
-    title: "Done",
-    border: "border-emerald-500/30",
-    headerBg: "bg-emerald-500",
+    id: 'Done',
+    title: 'Done',
+    border: 'border-emerald-500/30',
+    headerBg: 'bg-emerald-500',
   },
 ];
 
@@ -94,47 +87,43 @@ function findTask(tasks: Task[], id: string): Task | undefined {
 
 function kanbanReducer(state: KanbanState, action: KanbanAction): KanbanState {
   switch (action.type) {
-    case "SET_TASKS":
+    case 'SET_TASKS':
       return { ...state, tasks: action.payload, snapshot: null, error: null };
 
-    case "OPTIMISTIC_MOVE": {
+    case 'OPTIMISTIC_MOVE': {
       const { taskId, status } = action.payload;
-      const next = state.tasks.map((t) =>
-        isSameTask(t, taskId) ? { ...t, status } : t
-      );
+      const next = state.tasks.map((t) => (isSameTask(t, taskId) ? { ...t, status } : t));
       return { ...state, tasks: next, snapshot: state.tasks, error: null };
     }
 
-    case "CONFIRM":
+    case 'CONFIRM':
       return { ...state, snapshot: null };
 
-    case "ROLLBACK":
+    case 'ROLLBACK':
       return {
         ...state,
         tasks: state.snapshot ?? state.tasks,
         snapshot: null,
-        error: action.payload ?? "Update failed. Changes reverted.",
+        error: action.payload ?? 'Update failed. Changes reverted.',
       };
 
-    case "CLEAR_ERROR":
+    case 'CLEAR_ERROR':
       return { ...state, error: null };
 
-    case "ADD_TASK":
+    case 'ADD_TASK':
       return { ...state, tasks: [...state.tasks, action.payload] };
 
-    case "UPDATE_TASK": {
+    case 'UPDATE_TASK': {
       const patch = action.payload;
       return {
         ...state,
         tasks: state.tasks.map((t) =>
-          isSameTask(t, patch._id ?? "") || isSameTask(t, patch.id ?? "")
-            ? { ...t, ...patch }
-            : t
+          isSameTask(t, patch._id ?? '') || isSameTask(t, patch.id ?? '') ? { ...t, ...patch } : t
         ),
       };
     }
 
-    case "REMOVE_TASK":
+    case 'REMOVE_TASK':
       return {
         ...state,
         tasks: state.tasks.filter((t) => !isSameTask(t, action.payload)),
@@ -161,18 +150,16 @@ export default function KanbanBoard({
     error: null,
   });
 
-  const [editingColumn, setEditingColumn] = useState<Task["status"] | null>(
-    null
-  );
-  const [newTaskTitle, setNewTaskTitle] = useState("");
+  const [editingColumn, setEditingColumn] = useState<Task['status'] | null>(null);
+  const [newTaskTitle, setNewTaskTitle] = useState('');
   const [draggedTask, setDraggedTask] = useState<Task | null>(null);
   const [typingUsers, setTypingUsers] = useState<Record<string, string>>({});
 
-  const [dropTarget, setDropTarget] = useState<Task["status"] | null>(null);
+  const [dropTarget, setDropTarget] = useState<Task['status'] | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const tasksByStatus = useMemo(() => {
-    const map: Record<Task["status"], Task[]> = {
+    const map: Record<Task['status'], Task[]> = {
       Todo: [],
       In_Progress: [],
       Review: [],
@@ -185,33 +172,30 @@ export default function KanbanBoard({
   }, [state.tasks]);
 
   useSocket(
-    "task_updated",
-    (payload: { taskId: string; status: Task["status"]; roomId: string }) => {
+    'task_updated',
+    (payload: { taskId: string; status: Task['status']; roomId: string }) => {
       if (!payload || payload.roomId !== roomId) return;
       dispatch({
-        type: "UPDATE_TASK",
+        type: 'UPDATE_TASK',
         payload: { _id: payload.taskId, status: payload.status },
       });
     }
   );
 
-  useSocket("task_created", (payload: Task & { roomId: string }) => {
+  useSocket('task_created', (payload: Task & { roomId: string }) => {
     if (!payload || payload.roomId !== roomId) return;
-    dispatch({ type: "ADD_TASK", payload });
+    dispatch({ type: 'ADD_TASK', payload });
   });
 
-  useSocket(
-    "typing_start",
-    (payload: { socketId: string; user?: { name: string } }) => {
-      if (!payload || payload.socketId === socket?.id) return;
-      setTypingUsers((prev) => ({
-        ...prev,
-        [payload.socketId]: payload.user?.name ?? "Someone",
-      }));
-    }
-  );
+  useSocket('typing_start', (payload: { socketId: string; user?: { name: string } }) => {
+    if (!payload || payload.socketId === socket?.id) return;
+    setTypingUsers((prev) => ({
+      ...prev,
+      [payload.socketId]: payload.user?.name ?? 'Someone',
+    }));
+  });
 
-  useSocket("typing_stop", (payload: { socketId: string }) => {
+  useSocket('typing_stop', (payload: { socketId: string }) => {
     if (!payload) return;
     setTypingUsers((prev) => {
       const next = { ...prev };
@@ -223,27 +207,23 @@ export default function KanbanBoard({
   useEffect(() => {
     if (!socket || !roomId) return;
 
-    socket.emit(
-      "join_room",
-      roomId,
-      (res: { success: boolean; error?: string }) => {
-        if (!res?.success) {
-          dispatch({
-            type: "ROLLBACK",
-            payload: `Failed to join room: ${res?.error ?? "unknown"}`,
-          });
-        }
+    socket.emit('join_room', roomId, (res: { success: boolean; error?: string }) => {
+      if (!res?.success) {
+        dispatch({
+          type: 'ROLLBACK',
+          payload: `Failed to join room: ${res?.error ?? 'unknown'}`,
+        });
       }
-    );
+    });
 
     return () => {
-      socket.emit("leave_room", roomId);
+      socket.emit('leave_room', roomId);
     };
   }, [socket, roomId]);
 
   useEffect(() => {
     if (!state.error) return;
-    const t = setTimeout(() => dispatch({ type: "CLEAR_ERROR" }), 5000);
+    const t = setTimeout(() => dispatch({ type: 'CLEAR_ERROR' }), 5000);
     return () => clearTimeout(t);
   }, [state.error]);
 
@@ -251,19 +231,19 @@ export default function KanbanBoard({
     return () => {
       if (typingTimer.current) clearTimeout(typingTimer.current);
       if (socket && roomId) {
-        socket.emit("typing_stop", { roomId });
+        socket.emit('typing_stop', { roomId });
       }
     };
   }, [socket, roomId]);
 
   const moveTask = useCallback(
-    (taskId: string, newStatus: Task["status"]) => {
+    (taskId: string, newStatus: Task['status']) => {
       const task = findTask(state.tasks, taskId);
       if (!task || task.status === newStatus) return;
 
       const previousStatus = task.status;
       dispatch({
-        type: "OPTIMISTIC_MOVE",
+        type: 'OPTIMISTIC_MOVE',
         payload: { taskId, status: newStatus },
       });
 
@@ -271,13 +251,13 @@ export default function KanbanBoard({
 
       const timeout = setTimeout(() => {
         dispatch({
-          type: "ROLLBACK",
-          payload: "Server did not respond. Changes reverted.",
+          type: 'ROLLBACK',
+          payload: 'Server did not respond. Changes reverted.',
         });
       }, 8000);
 
       socket.emit(
-        "task_update_status",
+        'task_update_status',
         {
           roomId,
           taskId,
@@ -288,11 +268,11 @@ export default function KanbanBoard({
         (response: { success: boolean; error?: string }) => {
           clearTimeout(timeout);
           if (response?.success) {
-            dispatch({ type: "CONFIRM" });
+            dispatch({ type: 'CONFIRM' });
           } else {
             dispatch({
-              type: "ROLLBACK",
-              payload: response?.error ?? "Server rejected update.",
+              type: 'ROLLBACK',
+              payload: response?.error ?? 'Server rejected update.',
             });
           }
         }
@@ -304,38 +284,35 @@ export default function KanbanBoard({
   const emitTyping = useCallback(() => {
     if (!socket || !roomId) return;
 
-    socket.emit("typing_start", { roomId, user });
+    socket.emit('typing_start', { roomId, user });
 
     if (typingTimer.current) clearTimeout(typingTimer.current);
     typingTimer.current = setTimeout(() => {
-      socket.emit("typing_stop", { roomId });
+      socket.emit('typing_stop', { roomId });
     }, 1500);
   }, [socket, roomId, user]);
 
-  const handleDragStart = useCallback(
-    (e: React.DragEvent<HTMLDivElement>, task: Task) => {
-      setDraggedTask(task);
-      e.dataTransfer.effectAllowed = "move";
-      e.dataTransfer.setData("text/plain", task._id ?? task.id ?? "");
-    },
-    []
-  );
+  const handleDragStart = useCallback((e: React.DragEvent<HTMLDivElement>, task: Task) => {
+    setDraggedTask(task);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', task._id ?? task.id ?? '');
+  }, []);
 
   const handleDragEnd = useCallback(() => {
     setDraggedTask(null);
   }, []);
 
   const handleDragOver = useCallback(
-    (e: React.DragEvent<HTMLDivElement>, status: Task["status"]) => {
+    (e: React.DragEvent<HTMLDivElement>, status: Task['status']) => {
       e.preventDefault();
-      e.dataTransfer.dropEffect = "move";
+      e.dataTransfer.dropEffect = 'move';
       setDropTarget(status);
     },
     []
   );
 
   const handleDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>, status: Task["status"]) => {
+    (e: React.DragEvent<HTMLDivElement>, status: Task['status']) => {
       e.preventDefault();
       if (!draggedTask) return;
       const id = draggedTask._id ?? draggedTask.id;
@@ -346,7 +323,7 @@ export default function KanbanBoard({
   );
 
   const handleAddTask = useCallback(
-    (status: Task["status"]) => {
+    (status: Task['status']) => {
       const title = newTaskTitle.trim();
       if (!title) return;
 
@@ -354,34 +331,34 @@ export default function KanbanBoard({
       const newTask: Task = {
         _id: tempId,
         title,
-        description: "",
+        description: '',
         status,
-        priority: "Medium",
+        priority: 'Medium',
         createdAt: new Date().toISOString(),
       };
 
-      dispatch({ type: "ADD_TASK", payload: newTask });
-      setNewTaskTitle("");
+      dispatch({ type: 'ADD_TASK', payload: newTask });
+      setNewTaskTitle('');
       setEditingColumn(null);
 
       if (socket) {
         socket.emit(
-          "task_create",
+          'task_create',
           { roomId, task: newTask },
           (response: { success: boolean; task?: Task; error?: string }) => {
             if (response?.success && response.task) {
               dispatch({
-                type: "UPDATE_TASK",
+                type: 'UPDATE_TASK',
                 payload: {
                   _id: tempId,
                   id: response.task._id ?? response.task.id,
                 },
               });
             } else {
-              dispatch({ type: "REMOVE_TASK", payload: tempId });
+              dispatch({ type: 'REMOVE_TASK', payload: tempId });
               dispatch({
-                type: "ROLLBACK",
-                payload: response?.error ?? "Failed to create task.",
+                type: 'ROLLBACK',
+                payload: response?.error ?? 'Failed to create task.',
               });
             }
           }
@@ -411,23 +388,19 @@ export default function KanbanBoard({
               &larr; Back
             </button>
           )}
-          <h1 className="text-base font-semibold tracking-tight">
-            Kanban Board
-          </h1>
+          <h1 className="text-base font-semibold tracking-tight">Kanban Board</h1>
           <span className="text-[11px] text-white/40 bg-white/5 px-2 py-0.5 rounded-full font-mono">
             {roomId}
           </span>
           <span className="text-xs text-white/40">
-            {state.tasks.length} task{state.tasks.length !== 1 ? "s" : ""}
+            {state.tasks.length} task{state.tasks.length !== 1 ? 's' : ''}
           </span>
           <span
             className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${
-              isConnected
-                ? "bg-emerald-500/15 text-emerald-400"
-                : "bg-red-500/15 text-red-400"
+              isConnected ? 'bg-emerald-500/15 text-emerald-400' : 'bg-red-500/15 text-red-400'
             }`}
           >
-            {isConnected ? "connected" : "disconnected"}
+            {isConnected ? 'connected' : 'disconnected'}
           </span>
         </div>
 
@@ -458,7 +431,7 @@ export default function KanbanBoard({
               key={col.id}
               className={`flex flex-col rounded-xl border min-w-[280px] w-[280px] max-h-full transition-all duration-150 ${
                 col.border
-              } ${isOver ? "ring-2 ring-white/20 scale-[1.01]" : ""}`}
+              } ${isOver ? 'ring-2 ring-white/20 scale-[1.01]' : ''}`}
               onDragOver={(e) => handleDragOver(e, col.id)}
               onDrop={(e) => handleDrop(e, col.id)}
             >
@@ -467,9 +440,7 @@ export default function KanbanBoard({
               >
                 <div className="flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-white/60" />
-                  <h2 className="text-sm font-semibold text-white drop-shadow-sm">
-                    {col.title}
-                  </h2>
+                  <h2 className="text-sm font-semibold text-white drop-shadow-sm">{col.title}</h2>
                   <span className="text-xs text-white/80 bg-white/20 px-1.5 py-0.5 rounded-full font-medium">
                     {tasks.length}
                   </span>
@@ -477,7 +448,7 @@ export default function KanbanBoard({
                 <button
                   onClick={() => {
                     setEditingColumn(col.id);
-                    setNewTaskTitle("");
+                    setNewTaskTitle('');
                   }}
                   className="text-white/70 hover:text-white transition-colors p-0.5"
                   aria-label={`Add task to ${col.title}`}
@@ -488,7 +459,7 @@ export default function KanbanBoard({
 
               <div className="flex flex-col gap-2 p-3 overflow-y-auto max-h-[calc(100vh-220px)]">
                 {tasks.map((task) => {
-                  const taskId = task._id ?? task.id ?? "";
+                  const taskId = task._id ?? task.id ?? '';
                   return (
                     <div
                       key={taskId}
@@ -519,11 +490,11 @@ export default function KanbanBoard({
                           {task.priority && (
                             <span
                               className={`text-[10px] font-medium px-1.5 py-0.5 rounded ${
-                                task.priority === "High"
-                                  ? "bg-red-500/20 text-red-300"
-                                  : task.priority === "Medium"
-                                    ? "bg-amber-500/20 text-amber-300"
-                                    : "bg-slate-500/20 text-slate-300"
+                                task.priority === 'High'
+                                  ? 'bg-red-500/20 text-red-300'
+                                  : task.priority === 'Medium'
+                                    ? 'bg-amber-500/20 text-amber-300'
+                                    : 'bg-slate-500/20 text-slate-300'
                               }`}
                             >
                               {task.priority}
@@ -533,9 +504,9 @@ export default function KanbanBoard({
                           {task.assignedTo && (
                             <span
                               className="w-5 h-5 rounded-full bg-white/10 border border-[#1a1a1a] flex items-center justify-center text-[9px] font-medium text-white/60 shrink-0"
-                              title={task.assignedTo.name ?? "Assigned"}
+                              title={task.assignedTo.name ?? 'Assigned'}
                             >
-                              {(task.assignedTo.name?.[0] ?? "?").toUpperCase()}
+                              {(task.assignedTo.name?.[0] ?? '?').toUpperCase()}
                             </span>
                           )}
                         </div>
@@ -568,10 +539,10 @@ export default function KanbanBoard({
                     value={newTaskTitle}
                     onChange={(e) => setNewTaskTitle(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === "Enter") handleAddTask(col.id);
-                      if (e.key === "Escape") {
+                      if (e.key === 'Enter') handleAddTask(col.id);
+                      if (e.key === 'Escape') {
                         setEditingColumn(null);
-                        setNewTaskTitle("");
+                        setNewTaskTitle('');
                       }
                       emitTyping();
                     }}
@@ -588,7 +559,7 @@ export default function KanbanBoard({
                     <button
                       onClick={() => {
                         setEditingColumn(null);
-                        setNewTaskTitle("");
+                        setNewTaskTitle('');
                       }}
                       className="text-white/40 hover:text-white/60 text-xs py-1.5 px-3 transition-colors"
                     >

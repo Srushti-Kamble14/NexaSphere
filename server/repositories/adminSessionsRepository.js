@@ -68,8 +68,12 @@ async function ensureSchema(client) {
     )
   `);
 
-  await client.query('create index if not exists idx_admin_sessions_expires_at on admin_sessions (expires_at)');
-  await client.query('create index if not exists idx_admin_sessions_revoked_at on admin_sessions (revoked_at)');
+  await client.query(
+    'create index if not exists idx_admin_sessions_expires_at on admin_sessions (expires_at)'
+  );
+  await client.query(
+    'create index if not exists idx_admin_sessions_revoked_at on admin_sessions (revoked_at)'
+  );
 }
 
 async function ensureReady() {
@@ -84,7 +88,7 @@ async function ensureReady() {
 
 export async function createAdminSession({ username, metadata = {} }) {
   await ensureReady();
-  
+
   // Force await cleanup on new sessions to guarantee cleanup under serverless starts
   await triggerLazyCleanup(true);
 
@@ -136,7 +140,10 @@ export async function getAdminSession(token) {
 
     if (!rows.length) {
       lastSeenThrottleMap.delete(tokenHash);
-      await client.query('delete from admin_sessions where token_hash = $1 and (expires_at <= now() or revoked_at is not null)', [tokenHash]);
+      await client.query(
+        'delete from admin_sessions where token_hash = $1 and (expires_at <= now() or revoked_at is not null)',
+        [tokenHash]
+      );
       return null;
     }
 
@@ -150,7 +157,10 @@ export async function getAdminSession(token) {
 
       // Async non-blocking deferred persistence: execute outside the request query thread context
       withDb(async (dbClient) => {
-        await dbClient.query('update admin_sessions set last_seen_at = now() where token_hash = $1', [tokenHash]);
+        await dbClient.query(
+          'update admin_sessions set last_seen_at = now() where token_hash = $1',
+          [tokenHash]
+        );
       }).catch((error) => {
         console.error('Failed to update admin session last_seen_at asynchronously:', error);
       });
@@ -216,7 +226,9 @@ export function startAdminSessionCleanup() {
   );
 
   if (isServerless) {
-    console.log('[Admin Session Cleanup] Serverless environment detected. Skipping background interval timer.');
+    console.log(
+      '[Admin Session Cleanup] Serverless environment detected. Skipping background interval timer.'
+    );
     return null;
   }
 

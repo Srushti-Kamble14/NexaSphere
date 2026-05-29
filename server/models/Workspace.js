@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const teamRoomSchema = new mongoose.Schema(
   {
@@ -12,23 +12,23 @@ const teamRoomSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 500,
-      default: "",
+      default: '',
     },
     owner: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     members: [
       {
         user: {
           type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
+          ref: 'User',
           required: true,
         },
         role: {
           type: String,
-          enum: ["Admin", "Contributor", "Viewer"],
+          enum: ['Admin', 'Contributor', 'Viewer'],
           required: true,
         },
       },
@@ -37,9 +37,9 @@ const teamRoomSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-teamRoomSchema.index({ "members.user": 1 });
+teamRoomSchema.index({ 'members.user': 1 });
 
-export const TeamRoom = mongoose.model("TeamRoom", teamRoomSchema);
+export const TeamRoom = mongoose.model('TeamRoom', teamRoomSchema);
 
 const taskSchema = new mongoose.Schema(
   {
@@ -53,27 +53,27 @@ const taskSchema = new mongoose.Schema(
       type: String,
       trim: true,
       maxlength: 2000,
-      default: "",
+      default: '',
     },
     status: {
       type: String,
-      enum: ["Todo", "In_Progress", "Review", "Done"],
-      default: "Todo",
+      enum: ['Todo', 'In_Progress', 'Review', 'Done'],
+      default: 'Todo',
       index: true,
     },
     priority: {
       type: String,
-      enum: ["Low", "Medium", "High"],
-      default: "Medium",
+      enum: ['Low', 'Medium', 'High'],
+      default: 'Medium',
     },
     assignedTo: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       default: null,
     },
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "TeamRoom",
+      ref: 'TeamRoom',
       required: true,
       index: true,
     },
@@ -87,19 +87,19 @@ const taskSchema = new mongoose.Schema(
 
 taskSchema.index({ roomId: 1, status: 1 });
 
-export const Task = mongoose.model("Task", taskSchema);
+export const Task = mongoose.model('Task', taskSchema);
 
 const messageSchema = new mongoose.Schema(
   {
     roomId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "TeamRoom",
+      ref: 'TeamRoom',
       required: true,
       index: true,
     },
     sender: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
+      ref: 'User',
       required: true,
     },
     content: {
@@ -114,4 +114,4 @@ const messageSchema = new mongoose.Schema(
 
 messageSchema.index({ roomId: 1, createdAt: 1 });
 
-export const Message = mongoose.model("Message", messageSchema);
+export const Message = mongoose.model('Message', messageSchema);

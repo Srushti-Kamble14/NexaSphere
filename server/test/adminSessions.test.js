@@ -94,7 +94,9 @@ test('First session lookup returns session data and triggers background async la
   // Give a tiny timeout for the async background DB update to trigger
   await new Promise((resolve) => setTimeout(resolve, 50));
 
-  const updateQuery = executedQueries.find((q) => q.sql.includes('update admin_sessions set last_seen_at'));
+  const updateQuery = executedQueries.find((q) =>
+    q.sql.includes('update admin_sessions set last_seen_at')
+  );
   assert.ok(updateQuery, 'Should have triggered async background UPDATE');
   assert.equal(updateQuery.params[0], insertQueryParamHash('mock_token'));
 });
@@ -124,7 +126,9 @@ test('Subsequent retrievals within the throttle window skip the database UPDATE 
   await new Promise((resolve) => setTimeout(resolve, 30));
 
   // Check if any UPDATE queries were run during the throttled rapid sessions
-  const updates = executedQueries.filter((q) => q.sql.includes('update admin_sessions set last_seen_at'));
+  const updates = executedQueries.filter((q) =>
+    q.sql.includes('update admin_sessions set last_seen_at')
+  );
   assert.equal(updates.length, 0, 'Should skip UPDATE query under concurrent throttle');
 });
 
@@ -153,15 +157,23 @@ test('Retrievals outside the throttle window trigger a new database UPDATE', asy
   await getAdminSession('mock_token');
   await new Promise((resolve) => setTimeout(resolve, 20));
 
-  const updates = executedQueries.filter((q) => q.sql.includes('update admin_sessions set last_seen_at'));
-  assert.equal(updates.length, 1, 'Should trigger exactly one new UPDATE query after throttle expires');
+  const updates = executedQueries.filter((q) =>
+    q.sql.includes('update admin_sessions set last_seen_at')
+  );
+  assert.equal(
+    updates.length,
+    1,
+    'Should trigger exactly one new UPDATE query after throttle expires'
+  );
 });
 
 test('Revoking a session deletes the throttled entry and updates DB', async () => {
   const result = await revokeAdminSession('mock_token');
   assert.ok(result === false || result === true);
 
-  const revokeQuery = executedQueries.find((q) => q.sql.includes('update admin_sessions set revoked_at'));
+  const revokeQuery = executedQueries.find((q) =>
+    q.sql.includes('update admin_sessions set revoked_at')
+  );
   assert.ok(revokeQuery, 'Should execute DB revocation query');
   assert.equal(revokeQuery.params[0], insertQueryParamHash('mock_token'));
 });

@@ -6,10 +6,9 @@ export default defineConfig({
   plugins: [
     react(),
     federation({
-      name: "adminDashboard",
-      filename: "remoteEntry.js",
-      exposes: {
-        "./DashboardIndex": "./src/DashboardIndex.jsx",
+      name: "nexasphereHost",
+      remotes: {
+        adminDashboard: "http://localhost:5001/assets/remoteEntry.js",
       },
       shared: {
         react: {
@@ -27,16 +26,13 @@ export default defineConfig({
       },
     }),
   ],
-  base: "/",
   server: {
-    port: 5001,
+    port: 5000,
   },
   preview: {
-    port: 5001,
+    port: 5000,
   },
   build: {
     target: "esnext",
-    minify: false,
-    cssCodeSplit: false,
   },
 });

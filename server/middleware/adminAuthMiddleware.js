@@ -76,17 +76,17 @@ function recordLoginAttempt(ip) {
       }
     }
 
-    // 2. If still full, use intelligent eviction to prioritize unblocked IPs over active brute-force attackers
+    // 2. If still full, evict blocked IPs first to preserve legitimate user entries
     if (loginAttemptsByIp.size >= LOGIN_MAX_TRACKED_IPS) {
       let evictKey = null;
       for (const [key, entry] of loginAttemptsByIp.entries()) {
-        if (entry.attempts <= LOGIN_MAX_ATTEMPTS) {
+        if (entry.attempts > LOGIN_MAX_ATTEMPTS) {
           evictKey = key;
           break;
         }
       }
 
-      // Fallback to oldest entry (FIFO) only if all tracked IPs are currently blocked
+      // Fallback to oldest entry (FIFO) if no blocked IPs found
       if (!evictKey) {
         evictKey = loginAttemptsByIp.keys().next().value;
       }

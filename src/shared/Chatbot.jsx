@@ -6,6 +6,7 @@ import SearchBar from '../components/history/SearchBar';
 import PinnedChats from '../components/history/PinnedChats';
 import { savePrompt } from '../lib/promptStore';
 import { initializeWorkspaces } from '../lib/workspaceService';
+import { buildUrl, getAiApiBase } from '../utils/runtimeConfig';
 
 const Chatbot = () => {
   const [isOpen, setIsOpen] = useState(false);

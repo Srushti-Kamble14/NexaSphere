@@ -6,6 +6,7 @@ import './styles/animations.css';
 import './styles/chatbot.css';
 import './styles/components.css';
 import './styles/portfolio.css';
+import './styles/pwa.css';
 
 import './styles/aurora.css';
 import './styles/motion.css';
@@ -65,9 +66,12 @@ import { useInteractionEffects } from './hooks/useInteractionEffects';
 import { useBackToTop } from './hooks/useScrollLogic';
 
 import MoveToTop from "./shared/MoveToTop";
+import OfflineBanner  from './components/pwa/OfflineBanner.jsx';
+import InstallPrompt  from './components/pwa/InstallPrompt.jsx';
+import UpdatePrompt   from './components/pwa/UpdatePrompt.jsx';
 
-const MNH = 88, DNH = 64;
-const TABS = ['Home','Dashboard','Analytics','Activities','Events','Projects','Roadmaps','Portfolio','Collab','About','Team','Contact'];
+const MNH = 88, DNH = 86;
+const TABS = ['Home', 'Dashboard', 'Activities', 'Events', 'Projects', 'Roadmaps', 'Portfolio', 'Collab', 'About', 'Team', 'Contact'];
 
 
 /* ── Page wipe transition ── */
@@ -490,8 +494,24 @@ function MainApp() {
   const nh = mobile ? MNH : DNH;
   const cur = page?.activityKey ? activityPages[page.activityKey] : null;
 
+  /* ── SW update prompt state ────────────────────────────────────────────── */
+  const [swUpdateFn, setSwUpdateFn] = useState(null);
+
+  useEffect(() => {
+    const handleSwUpdate = (e) => {
+      if (e.detail?.updateSW) setSwUpdateFn(() => e.detail.updateSW);
+    };
+    window.addEventListener('nexasphere:sw-update', handleSwUpdate);
+    return () => window.removeEventListener('nexasphere:sw-update', handleSwUpdate);
+  }, []);
+
   return (
     <BookmarkProvider>
+      {/* ── PWA Components ── */}
+      <OfflineBanner />
+      <InstallPrompt />
+      {swUpdateFn && <UpdatePrompt updateSW={swUpdateFn} />}
+
       {/* Chatbot – kept at very top */}
       <Chatbot />
 

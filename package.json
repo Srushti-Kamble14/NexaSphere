@@ -13,14 +13,13 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",
-    "lint": "echo \"Lint skipped\"",
+    "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "e2e": "playwright test",
     "e2e:debug": "playwright test --debug",
     "prepare": "husky",
     "format:check": "echo 'Format check bypassed' && exit 0",
-    "lint": "echo 'Linting bypassed' && exit 0",
-    "typecheck": "echo 'Typecheck bypassed' && exit 0"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@fullcalendar/daygrid": "^6.1.20",

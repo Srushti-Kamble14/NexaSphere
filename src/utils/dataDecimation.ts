@@ -62,7 +62,7 @@ export function decimateData<T>(
       // Calculate triangle area over three buckets
       const area =
         Math.abs(
-          (pointAX - avgX) * (Number(data[rangeOffs][yKey]) || 0 - pointAY) -
+          (pointAX - avgX) * ((Number(data[rangeOffs][yKey]) || 0) - pointAY) -
             (pointAX - (Number(data[rangeOffs][xKey]) || 0)) * (avgY - pointAY)
         ) * 0.5;
       if (area > maxArea) {

@@ -445,9 +445,89 @@ npm run dev
 ```
 NexaSphere/
 │
-├── 📂 app/                          # Next.js App Router
-│   ├── error.tsx                    # Segment-level error boundary
-│   └── global-error.tsx             # Root layout error screen
+├── 📂 src/                        ← React 18 application source
+│   ├── App.jsx                    ← Root router and layout shell
+│   ├── main.jsx                   ← Vite entry point
+│   ├── i18n.js                    ← Internationalisation config
+│   │
+│   ├── 📂 components/             ← Reusable UI components
+│   │   ├── admin/                 ← Admin-only UI panels
+│   │   ├── bookmarks/             ← Bookmark UI widgets
+│   │   ├── calendar/              ← Event calendar views
+│   │   ├── collab/                ← Collaborative workspace UI
+│   │   ├── common/                ← Shared atomic components
+│   │   ├── dashboard/             ← Dashboard widgets
+│   │   ├── developer/             ← Developer profile cards
+│   │   ├── events/                ← Event listings & detail views
+│   │   ├── gamification/          ← Points, badges, leaderboard UI
+│   │   ├── history/               ← Activity history display
+│   │   ├── moderation/            ← Content moderation controls
+│   │   ├── portfolio/             ← Portfolio builder components
+│   │   ├── recommendation/        ← AI recommendation widgets
+│   │   ├── roadmaps/              ← Interactive roadmap builder
+│   │   ├── ResumeAnalyzer/        ← Resume upload & AI analysis
+│   │   └── ui/                    ← Base design system primitives
+│   │
+│   ├── 📂 pages/                  ← Route-level page components
+│   │   ├── home/                  ← Landing page
+│   │   ├── events/                ← Events listing & detail
+│   │   ├── dashboard/             ← User dashboard
+│   │   ├── admin/                 ← Admin control panel
+│   │   ├── portfolio/             ← Portfolio viewer
+│   │   ├── roadmaps/              ← Roadmap explorer
+│   │   ├── workspace/             ← Collaborative workspace
+│   │   ├── resume/                ← Resume tools
+│   │   ├── team/                  ← Core team directory
+│   │   ├── collab/                ← Collaboration hub
+│   │   ├── certificates/          ← Certificate viewer
+│   │   ├── membership/            ← Membership management
+│   │   ├── projects/              ← Project showcase
+│   │   ├── recruitment/           ← Recruitment board
+│   │   ├── activities/            ← Activity feed
+│   │   ├── about/                 ← About page
+│   │   └── contact/               ← Contact page
+│   │
+│   ├── 📂 context/                ← React Context providers
+│   │   ├── BookmarkContext.tsx    ← Bookmark state provider
+│   │   ├── RoadmapBuilderContext.tsx ← Roadmap builder state
+│   │   ├── SocketContext.tsx      ← Socket.io context wrapper
+│   │   └── theme/                 ← Theme (dark/light) context
+│   │
+│   ├── 📂 hooks/                  ← Custom React hooks
+│   │   ├── useSocket.js/.ts       ← Socket.io connection hook
+│   │   ├── useNotifications.js    ← Push notification hook
+│   │   ├── useSearch.js           ← Global search hook
+│   │   ├── useFormValidation.js   ← Form validation hook
+│   │   ├── useRecommendations.js  ← AI recommendations hook
+│   │   └── ...                    ← 18 hooks total
+│   │
+│   ├── 📂 services/               ← API client & service layer
+│   │   ├── dashboardRepository.js ← Dashboard data fetching
+│   │   ├── moderationService.js   ← Content moderation calls
+│   │   ├── socket.ts              ← Socket client initialiser
+│   │   └── recommendation/        ← AI recommendation service
+│   │
+│   ├── 📂 store/                  ← Zustand global stores
+│   │   └── workspaceStore.ts      ← Workspace collaboration state
+│   │
+│   ├── 📂 lib/                    ← Core utilities & integrations
+│   │   ├── logger.ts              ← Pino logger setup
+│   │   ├── promptStore.js         ← AI prompt management
+│   │   └── workspaceService.js    ← Workspace business logic
+│   │
+│   ├── 📂 utils/                  ← Pure utility functions
+│   │   ├── socketClient.js        ← Socket.io singleton client
+│   │   ├── seoUtils.js            ← SEO meta tag helpers
+│   │   ├── errorTracking.js       ← Sentry error utilities
+│   │   ├── exportRoadmap.ts       ← PDF/PNG roadmap export
+│   │   ├── pushNotificationClient.js ← Push notification util
+│   │   └── ...                    ← 10 utilities total
+│   │
+│   ├── 📂 styles/                 ← Global CSS
+│   ├── 📂 assets/                 ← Static images, SVGs, fonts
+│   ├── 📂 data/                   ← Static JSON data files
+│   ├── 📂 locales/                ← i18n translation files
+│   └── 📂 shared/                 ← next-image / next-dynamic shims
 │
 ├── 📂 src/
 │   ├── 📂 components/              # Reusable UI elements
@@ -766,6 +846,10 @@ MIT License © 2026 NexaSphere — GL Bajaj Group of Institutions, Mathura
 <a href="https://github.com/DhruvalBhinsara1"><img src="https://github.com/DhruvalBhinsara1.png" width="50px" alt="DhruvalBhinsara1" title="DhruvalBhinsara1" /></a>
 <a href="https://github.com/anshul23102"><img src="https://github.com/anshul23102.png" width="50px" alt="anshul23102" title="anshul23102" /></a>
 <a href="https://github.com/Dippp10-ally"><img src="https://github.com/Dippp10-ally.png" width="50px" alt="Dippp10-ally" title="Dippp10-ally" /></a>
+<a href="https://github.com/Itzzavdheshh"><img src="https://github.com/Itzzavdheshh.png" width="50px" alt="Itzzavdheshh" title="Itzzavdheshh" /></a>
+<a href="https://github.com/tamannaa-rath"><img src="https://github.com/tamannaa-rath.png" width="50px" alt="tamannaa-rath" title="tamannaa-rath" /></a>
+<a href="https://github.com/parakramgambhir14"><img src="https://github.com/parakramgambhir14.png" width="50px" alt="parakramgambhir14" title="parakramgambhir14" /></a>
+<a href="https://github.com/bhumikasudarshani-cmd"><img src="https://github.com/bhumikasudarshani-cmd.png" width="50px" alt="bhumikasudarshani-cmd" title="bhumikasudarshani-cmd" /></a>
 <!-- CONTRIBUTORS_END -->
 
 </div>

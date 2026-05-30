@@ -144,6 +144,7 @@ export default function Navbar({
         </div>
       </nav>
     );
+
   return (
     <nav className={`ns-navbar${scrolled ? " scrolled" : ""}`}>
       <div className="container">
@@ -165,9 +166,7 @@ export default function Navbar({
 
           <div className="ns-nav-actions">
             <NotificationBell />
-
             <BookmarkToggle onToggle={onToggleBookmarks} />
-
             <div className="ns-nav-ctas">
               <button
                 className="btn btn-sm btn-outline ns-nav-cta-btn"
@@ -199,6 +198,23 @@ export default function Navbar({
               <span />
             </button>
           </div>
+        </div>
+
+        <div className="ns-nav-menu">
+          <ul className="ns-nav-tabs">
+            {TABS.map((t) => (
+              <li key={t}>
+                <button
+                  className={`ns-nav-tab${activeTab === t ? " active" : ""}${
+                    t === "Contact" ? " contact-tab contact-nav-tab" : ""
+                  }`}
+                  onClick={() => handleTab(t)}
+                >
+                  {t}
+                </button>
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </nav>

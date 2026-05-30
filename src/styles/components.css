@@ -170,20 +170,32 @@
 .ns-navbar {
   position:fixed; top:0; left:0; right:0; z-index:12000;
   /* height:var(--nh); */
-  background:rgba(10,10,10,0.94);
-  -webkit-backdrop-filter:blur(24px) saturate(180%); backdrop-filter:blur(24px) saturate(180%);
-  border-bottom:1px solid rgba(204,17,17,0.18);
-  transition:background .3s, box-shadow .3s !important;
+  background:transparent !important;
+  border-bottom:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
+  transition:background .4s, border-color .4s, box-shadow .4s, backdrop-filter .4s, -webkit-backdrop-filter .4s !important;
 }
 [data-theme="light"] .ns-navbar {
-  background: rgba(255,255,255,.96) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(220%) brightness(1.04) !important;
-  backdrop-filter: blur(40px) saturate(220%) brightness(1.04) !important;
-  border-bottom: 1px solid rgba(204,17,17,.08) !important;
-  box-shadow: inset 0 -1px 0 rgba(204,17,17,.06), 0 4px 24px rgba(0,0,0,.08) !important;
+  background:transparent !important;
+  border-bottom:none !important;
+  box-shadow:none !important;
+  backdrop-filter:none !important;
+  -webkit-backdrop-filter:none !important;
 }
-.ns-navbar.scrolled { background:rgba(5,5,8,.96); box-shadow:0 4px 32px rgba(204,17,17,.08); }
-[data-theme="light"] .ns-navbar.scrolled { background:rgba(255,255,255,0.99); box-shadow:0 2px 20px rgba(0,0,0,.08); }
+.ns-navbar.scrolled {
+  background:rgba(10,10,10,0.72) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important; backdrop-filter:blur(20px) saturate(180%) !important;
+  box-shadow:0 4px 32px rgba(204,17,17,.08) !important;
+  border-bottom:1px solid rgba(204,17,17,0.18) !important;
+}
+[data-theme="light"] .ns-navbar.scrolled {
+  background:rgba(255,255,255,0.72) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important; backdrop-filter:blur(20px) saturate(180%) !important;
+  box-shadow:0 4px 30px rgba(0,0,0,.03) !important;
+  border-bottom:1px solid rgba(204,17,17,0.06) !important;
+}
 .ns-navbar .container {
   position: relative;
   display: flex;
@@ -294,11 +306,6 @@
   text-align:center;
   transition:color .2s !important;
   white-space:nowrap;
-}
-  color:var(--t2); background:none; border:none; border-radius:8px; cursor:pointer;
-  width:100%;
-  text-align:center;
-  transition:color .2s !important; white-space:nowrap;
 }
 .ns-nav-tab::after {
   content:''; position:absolute; bottom:2px; left:50%; right:50%;
@@ -450,12 +457,17 @@
   }
 }
 
-.ns-navbar-mobile { position:fixed; top:0; left:0; right:0; z-index:12010; background:rgba(10,10,10,0.95); -webkit-backdrop-filter:blur(24px); backdrop-filter:blur(24px); border-bottom:1px solid var(--bdr); padding:6px 0 4px; }
+.ns-navbar-mobile {
+  position:fixed; top:0; left:0; right:0; z-index:12010;
+  background:rgba(10,10,10,0.65) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important; backdrop-filter:blur(20px) saturate(180%) !important;
+  border-bottom:1px solid rgba(204,17,17,0.1) !important;
+  padding:6px 0 4px;
+}
 [data-theme="light"] .ns-navbar-mobile {
-  background: rgba(255,255,255,.12) !important;
-  -webkit-backdrop-filter: blur(40px) saturate(200%) !important;
-  backdrop-filter: blur(40px) saturate(200%) !important;
-  border-bottom: 1px solid rgba(0,0,0,.05) !important;
+  background:rgba(255,255,255,0.65) !important;
+  -webkit-backdrop-filter:blur(20px) saturate(180%) !important; backdrop-filter:blur(20px) saturate(180%) !important;
+  border-bottom:1px solid rgba(0,0,0,0.05) !important;
 }
 .ns-mobile-top { display:flex; align-items:center; justify-content:center; gap:10px; padding:0 14px 5px; }
 .ns-mobile-logo-ns {
@@ -605,11 +617,15 @@
   .ns-mobile-tabs { padding-left: 8px; padding-right: 8px; }
 }
 
-/* Footer responsive wrapping to prevent stacked/overflow issues */
+/* Footer responsive centered column layout */
 .ns-footer .container .ns-footer-inner {
-  display:flex; align-items:center; gap:12px; flex-wrap:wrap; justify-content:space-between;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  justify-content: center;
 }
-.ns-footer-text { margin:6px 0; flex: 1 1 220px; min-width: 180px; }
+.ns-footer-text { margin: 4px 0; text-align: center; }
 
 @media (max-width: 768px) {
   .ns-footer .container .ns-footer-inner { gap:10px; }

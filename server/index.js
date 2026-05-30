@@ -3,6 +3,7 @@ import helmet from "helmet";
 import express from "express";
 import { EventEmitter } from "events";
 import cors from "cors";
+import morgan from "morgan";
 import { google } from "googleapis";
 import { promises as fs } from "fs";
 import path from "path";
@@ -16,6 +17,8 @@ import analyticsRouter from "./routes/analytics.js";
 import { initializeSocketIO, emitToRoom, getRoom } from "./config/socket.js";
 import adminStreamRouter from "./routes/adminStream.js";
 import { broadcastSSEEvent } from "./services/sseService.js";
+import documentationRouter from "./routes/documentation.js";
+import monitoringRouter from "./routes/monitoring.js";
 import rateLimit from "express-rate-limit";
 import 'dotenv/config';
 import helmet from 'helmet';
@@ -35,20 +38,21 @@ import analyticsRouter from './routes/analytics.js';
 import { initializeSocketIO, emitToRoom, getRoom } from './config/socket.js';
 import adminStreamRouter from './routes/adminStream.js';
 import { broadcastSSEEvent } from './services/sseService.js';
+import { performanceMonitor } from "./middleware/performanceMonitor.js";
+import { errorHandler, notFoundHandler } from "./middleware/errorHandler.js";
+import { initializeSentry, addSentryErrorHandler } from "./utils/sentry.js";
 import {
   apiRateLimiter,
   authRateLimiter,
   formRateLimiter,
   notificationRateLimiter,
-  formRateLimiter,
   activityAuthRateLimiter,
-} from "./middleware/rateLimiter.js";
-
-import { portfolioRepository } from "./repositories/portfolioRepository.js";
-import { Mutex } from "async-mutex";
   portfolioRateLimiter,
   validateLimiters,
 } from './middleware/rateLimiter.js';
+
+import { portfolioRepository } from "./repositories/portfolioRepository.js";
+import { Mutex } from "async-mutex";
 import { getPublicAppUrl } from './utils/publicAppUrl.js';
 
 // Import required controllers and services
@@ -69,6 +73,7 @@ const __dirname = path.dirname(__filename);
 const CONTENT_FILE = path.join(__dirname, 'data', 'content.json');
 
 const app = express();
+initializeSentry(app);
 app.use(helmet());
 
 app.use(
@@ -82,6 +87,8 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "512kb" }));
+app.use(morgan("combined"));
+app.use(performanceMonitor);
 const adminEvents = new EventEmitter();
 
 app.use(helmet());
@@ -113,6 +120,10 @@ function requestLogger(req, res, next) {
 }
 
 app.use(requestLogger);
+
+// Mount monitoring + API documentation routes (previously implemented but never registered).
+app.use("/api/monitoring", monitoringRouter);
+app.use("/api", documentationRouter);
 
 const adminAuth = adminAuthMiddleware.requireAdmin;
 adminEvents.on('CORE_TEAM_MEMBER_ADDED', (event) => console.log(`[EVENT] CORE_TEAM_MEMBER_ADDED:`, event));
@@ -1215,9 +1226,6 @@ app.get('/healthz', async (req, res) => {
 // Event channels/content
 app.get('/api/content/events', eventsController.listEvents);
 app.get('/api/content/activity-events/:activityKey', activityEventsController.listActivityEvents);
-app.post('/api/content/activity-events/:activityKey', activityEventsController.addActivityEvent);
-app.delete('/api/content/activity-events/:activityKey/:eventId', activityEventsController.deleteActivityEvent);
-
 // Admin Auth Endpoints
 app.post('/api/admin/login', authRateLimiter, adminAuthMiddleware.login);
 app.post('/api/admin/logout', adminAuthMiddleware.logout);
@@ -1424,17 +1432,6 @@ app.post('/api/notifications/unsubscribe', (req, res) => {
   }
 });
 
-// Server side notifications store api
-app.get('/api/notifications', (req, res) => {
-  try {
-    const userId = req.query.userId || 'global';
-    const list = notificationsService.getNotifications(userId);
-    return res.json({ notifications: list });
-  } catch (err) {
-    return res.status(500).json({ error: err.message });
-  }
-});
-
 app.post('/api/notifications/mark-read', adminAuth, notificationRateLimiter, (req, res) => {
   try {
     const { id, userId } = req.body || {};
@@ -1584,9 +1581,10 @@ app.post("/api/notifications/unsubscribe", notificationRateLimiter, (req, res) =
 // Server-side notifications API (simple in-memory store)
 import notificationsService from "./services/notificationsService.js";
 
-app.get("/api/notifications", adminAuth, notificationRateLimiter, (req, res) => {
+app.get("/api/notifications", (req, res) => {
   try {
-    const userId = req.adminSession?.username || "global";
+    // If user id provided via query or auth, use that; otherwise global
+    const userId = req.query.userId || "global";
     const list = notificationsService.getNotifications(userId);
     return res.json({ notifications: list });
   } catch (err) {
@@ -1600,9 +1598,9 @@ app.post(
   notificationRateLimiter,
   (req, res) => {
     try {
-      const { id } = req.body || {};
+      const { id, userId } = req.body || {};
       if (!id) return res.status(400).json({ error: "id required" });
-      const uid = req.adminSession?.username || "global";
+      const uid = userId || "global";
       const ok = notificationsService.markAsRead(uid, id);
       return res.json({ success: ok });
     } catch (err) {
@@ -1617,8 +1615,8 @@ app.post(
   notificationRateLimiter,
   (req, res) => {
     try {
-      const uid = req.adminSession?.username || "global";
-      notificationsService.markAllAsRead(uid);
+      const { userId } = req.body || {};
+      notificationsService.markAllAsRead(userId || "global");
       return res.json({ success: true });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -1633,8 +1631,8 @@ app.delete(
   (req, res) => {
     try {
       const id = req.params.id;
-      const uid = req.adminSession?.username || "global";
-      const removed = notificationsService.removeNotification(uid, id);
+      const userId = req.query.userId || "global";
+      const removed = notificationsService.removeNotification(userId, id);
       if (!removed)
         return res.status(404).json({ error: "Notification not found" });
       return res.json({ success: true });
@@ -1651,8 +1649,8 @@ app.delete(
   notificationRateLimiter,
   (req, res) => {
     try {
-      const uid = req.adminSession?.username || "global";
-      notificationsService.clearAll(uid);
+      const userId = req.query.userId || "global";
+      notificationsService.clearAll(userId);
       return res.json({ success: true });
     } catch (err) {
       return res.status(500).json({ error: err.message });
@@ -1667,12 +1665,12 @@ app.post(
   notificationRateLimiter,
   (req, res) => {
     try {
-      const { title, message, type, link } = req.body || {};
+      const { userId, title, message, type, link } = req.body || {};
       if (!title || !message)
         return res
           .status(400)
           .json({ error: "title and message are required" });
-      const note = notificationsService.addNotification(req.adminSession?.username || "global", {
+      const note = notificationsService.addNotification(userId || "global", {
         title,
         message,
         type,
@@ -1751,6 +1749,11 @@ app.put('/api/portfolio', portfolioRateLimiter, async (req, res) => {
     return res.status(500).json({ error: err.message || 'Internal server error' });
   }
 });
+
+// Must be registered after all routes.
+app.use(notFoundHandler);
+addSentryErrorHandler(app);
+app.use(errorHandler);
 
 process.on('unhandledRejection', (reason) => {
   console.error(

@@ -1,5 +1,6 @@
 package org.nexasphere.controller;
 
+import jakarta.validation.Valid;
 import org.nexasphere.model.entity.CollaborationTeamEntity;
 import org.nexasphere.model.entity.JoinRequestEntity;
 import org.nexasphere.service.crud.CollaborationService;
@@ -23,12 +24,12 @@ public class CollaborationController {
     }
 
     @PostMapping("/teams")
-    public ResponseEntity<CollaborationTeamEntity> createTeam(@RequestBody CollaborationTeamEntity team) {
+    public ResponseEntity<CollaborationTeamEntity> createTeam(@Valid @RequestBody CollaborationTeamEntity team) {
         return ResponseEntity.ok(collaborationService.createTeam(team));
     }
 
     @PostMapping("/requests")
-    public ResponseEntity<JoinRequestEntity> submitJoinRequest(@RequestBody JoinRequestEntity request) {
+    public ResponseEntity<JoinRequestEntity> submitJoinRequest(@Valid @RequestBody JoinRequestEntity request) {
         return ResponseEntity.ok(collaborationService.submitJoinRequest(request));
     }
 

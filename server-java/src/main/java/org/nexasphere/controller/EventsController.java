@@ -39,16 +39,35 @@ public class EventsController {
         return ResponseEntity.status(HttpStatus.CREATED).body(repo.save(event));
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<EventEntity> update(@PathVariable String id, @Valid @RequestBody EventEntity event) {
-        String safeId = Objects.requireNonNull(id, "id must not be null");
-        return repo.findById(safeId).map(existing -> {
-            event.setId(safeId);
-            event.setName(sanitizer.clean(event.getName()));
-            EventEntity saved = repo.save(event);
-            return ResponseEntity.ok(saved);
-        }).orElseGet(() -> ResponseEntity.notFound().build());
-    }
+   @PutMapping("/{id}")
+public ResponseEntity<EventEntity> update(@PathVariable String id,
+                                         @Valid @RequestBody EventEntity event) {
+
+    return repo.findById(id).map(existing -> {
+
+        // merge only non-null fields
+        if (event.getName() != null) {
+            existing.setName(sanitizer.clean(event.getName()));
+        }
+
+        if (event.getDescription() != null) {
+            existing.setDescription(event.getDescription());
+        }
+
+        if (event.getDate() != null) {
+            existing.setDate(event.getDate());
+        }
+
+        if (event.getLocation() != null) {
+            existing.setLocation(event.getLocation());
+        }
+
+        // save merged entity
+        EventEntity saved = repo.save(existing);
+        return ResponseEntity.ok(saved);
+
+    }).orElseGet(() -> ResponseEntity.notFound().build());
+}
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable String id) {

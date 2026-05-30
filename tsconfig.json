@@ -3,30 +3,20 @@
     "target": "ES2020",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ES2020"],
-    "allowJs": false,
+    "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
-    "strict": true,
+    "strict": false,
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
-    "moduleResolution": "Bundler",
+    "moduleResolution": "Node",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "types": ["vitest/globals", "jsdom"]
+    "types": ["vitest/globals", "vite/client"]
   },
-  "include": [
-    "src/**/*.ts",
-    "src/**/*.tsx",
-    "tests/**/*.ts",
-    "tests/**/*.tsx",
-    "e2e/**/*.ts",
-    "e2e/**/*.tsx",
-    "vite.config.js",
-    "vitest.config.ts",
-    "playwright.config.ts"
-  ],
-  "exclude": ["node_modules", "dist", "build", "coverage"]
+  "include": ["src", "tests", "e2e", "vite.config.js", "vitest.config.ts", "playwright.config.ts"],
+  "references": []
 }

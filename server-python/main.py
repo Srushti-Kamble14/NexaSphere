@@ -77,7 +77,7 @@ async def request_id_middleware(request: Request, call_next):
 async def root():
     return {"message": "NexaSphere AI Core API is running. Visit /docs for Swagger API documentation."}
 
-from routers import forms, recommend, notifications, health, portfolio
+from routers import forms, recommend, certificates, notifications, portfolio
 app.include_router(forms.router)
 app.include_router(recommend.router)
 app.include_router(certificates.router)

@@ -1,40 +1,52 @@
-import { useState, useEffect, useCallback } from 'react';
-import { api } from '../services/api';
-import { useEventListener } from '../hooks/useEventListener';
-import { EVENTS } from '../services/eventEmitter';
-import { CoreTeamForm } from '../components/CoreTeamForm';
-import { Skeleton } from '../components/Skeleton';
-import { AdminIcon } from '../components/AdminIcon';
+import { useState, useEffect, useCallback } from "react";
+import { api } from "../services/api";
+import { useEventListener } from "../hooks/useEventListener";
+import { EVENTS } from "../services/eventEmitter";
+import { CoreTeamForm } from "../components/CoreTeamForm";
+import { Skeleton } from "../components/Skeleton";
+import { AdminIcon } from "../components/AdminIcon";
 
 export function CoreTeamManager() {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [deleting, setDeleting] = useState(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
-    api.coreTeam.getAll()
-      .then(data => setMembers(data?.members ?? []))
+    api.coreTeam
+      .getAll()
+      .then((data) => setMembers(data?.members ?? []))
       .catch(() => setMembers([]))
       .finally(() => setLoading(false));
   }, []);
 
-  useEventListener(EVENTS.CORE_TEAM_MEMBER_ADDED, useCallback((member) => {
-    setMembers(prev => [...prev, member]);
-    setShowForm(false);
-  }, []));
+  useEventListener(
+    EVENTS.CORE_TEAM_MEMBER_ADDED,
+    useCallback((member) => {
+      setMembers((prev) => [...prev, member]);
+      setShowForm(false);
+    }, [])
+  );
 
-  useEventListener(EVENTS.CORE_TEAM_MEMBER_REMOVED, useCallback(({ id }) => {
-    setMembers(prev => prev.filter(m => m.id !== id));
-  }, []));
+  useEventListener(
+    EVENTS.CORE_TEAM_MEMBER_REMOVED,
+    useCallback(({ id }) => {
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+    }, [])
+  );
 
-  const handleRemove = async (id) => {
-    if (!confirm('Remove this member?')) return;
+  const handleRemove = async () => {
+    if (!deleteTarget) return;
+    const id = deleteTarget.id;
     setDeleting(id);
+    setDeleteError("");
     try {
       await api.coreTeam.remove(id);
+      setDeleteTarget(null);
     } catch {
-      alert('Failed to remove member');
+      setDeleteError("Failed to remove member. Please try again.");
     } finally {
       setDeleting(null);
     }
@@ -44,7 +56,9 @@ export function CoreTeamManager() {
     <div className="page">
       <div className="page-header">
         <h2 className="page-title">Core Team</h2>
-        <button className="btn-primary" onClick={() => setShowForm(true)}>+ Add Member</button>
+        <button className="btn-primary" onClick={() => setShowForm(true)}>
+          + Add Member
+        </button>
       </div>
 
       {showForm && <CoreTeamForm onClose={() => setShowForm(false)} />}
@@ -53,28 +67,95 @@ export function CoreTeamManager() {
 
       {!loading && (
         <div className="team-grid">
-          {members.length === 0 && <div className="empty-state">No team members yet.</div>}
-          {members.map(member => (
+          {members.length === 0 && (
+            <div className="empty-state">No team members yet.</div>
+          )}
+          {members.map((member) => (
             <div key={member.id} className="team-card">
-              {member.photo
-                ? <img src={member.photo} alt={member.name} className="team-avatar" />
-                : <div className="team-avatar-placeholder">{member.name?.[0]}</div>
-              }
+              {member.photo ? (
+                <img
+                  src={member.photo}
+                  alt={member.name}
+                  className="team-avatar"
+                />
+              ) : (
+                <div className="team-avatar-placeholder">
+                  {member.name?.[0]}
+                </div>
+              )}
               <div className="team-info">
                 <div className="item-name">{member.name}</div>
                 <div className="item-meta">{member.role}</div>
-                <div className="item-meta">{member.branch} {member.year && `· ${member.year}`}</div>
+                <div className="item-meta">
+                  {member.branch} {member.year && `· ${member.year}`}
+                </div>
               </div>
               <button
                 className="btn-icon danger"
-                onClick={() => handleRemove(member.id)}
+                onClick={() => {
+                  setDeleteTarget(member);
+                  setDeleteError("");
+                }}
                 disabled={deleting === member.id}
                 aria-label="Remove team member"
               >
-                {deleting === member.id ? '...' : <AdminIcon name="Trash" size={16} />}
+                {deleting === member.id ? (
+                  "..."
+                ) : (
+                  <AdminIcon name="Trash" size={16} />
+                )}
               </button>
             </div>
           ))}
+        </div>
+      )}
+
+      {deleteTarget && (
+        <div
+          className="modal-overlay"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-member-title"
+        >
+          <div className="modal">
+            <div className="modal-header">
+              <h3 id="delete-member-title">Remove Team Member</h3>
+              <button
+                className="modal-close"
+                onClick={() => setDeleteTarget(null)}
+                aria-label="Close"
+              >
+                <AdminIcon name="X" size={16} />
+              </button>
+            </div>
+            <p className="page-subtitle" style={{ marginBottom: 16 }}>
+              This will remove "{deleteTarget.name}" from the core team list.
+            </p>
+            {deleteError && <div className="page-error">{deleteError}</div>}
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "flex-end",
+                gap: 10,
+                marginTop: 20,
+              }}
+            >
+              <button
+                className="btn-secondary"
+                onClick={() => setDeleteTarget(null)}
+                disabled={deleting === deleteTarget.id}
+              >
+                Cancel
+              </button>
+              <button
+                className="btn-primary"
+                onClick={handleRemove}
+                disabled={deleting === deleteTarget.id}
+              >
+                {deleting === deleteTarget.id ? "Removing..." : "Remove Member"}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

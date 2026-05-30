@@ -332,7 +332,7 @@
   margin-bottom: 24px;
 }
 
-.section-title {
+.project-modal-section .section-title {
   font-family: 'Orbitron', monospace;
   font-size: 1.1rem;
   color: var(--c1);
@@ -342,7 +342,7 @@
   gap: 8px;
 }
 
-[data-theme="light"] .section-title {
+[data-theme="light"] .project-modal-section .section-title {
   color: #CC1111;
 }
 

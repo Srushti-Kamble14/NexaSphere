@@ -88,7 +88,7 @@ nexasphere/                  ← repository root
 ```
 src/
 ├── main.jsx              ← Vite entry point; mounts React app
-├── App.jsx / App.tsx     ← Root router, layout shell, global providers
+├── App.jsx               ← Root router, layout shell, global providers
 │
 ├── pages/                ← Route-level components (one per URL path)
 │   └── events/           ← e.g. /events → EventsPage.jsx

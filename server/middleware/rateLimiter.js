@@ -97,8 +97,6 @@ export const notificationRateLimiter = rateLimit({
 // when the server restarts the IP-level window survives in the rate-limit
 // store.
 export const activityAuthRateLimiter = rateLimit({
-// Portfolio update rate limiter — 10 requests per IP per 15 minutes
-export const portfolioRateLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 10,
   standardHeaders: true,
@@ -114,6 +112,13 @@ export const portfolioRateLimiter = rateLimit({
     });
   },
 });
+
+// Portfolio update rate limiter — 10 requests per IP per 15 minutes
+export const portfolioRateLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: {
     error:
       "Too many portfolio update attempts from this IP, please try again after 15 minutes.",
@@ -131,6 +136,7 @@ export function validateLimiters() {
     formRateLimiter,
     authRateLimiter,
     notificationRateLimiter,
+    activityAuthRateLimiter,
     portfolioRateLimiter,
   };
 

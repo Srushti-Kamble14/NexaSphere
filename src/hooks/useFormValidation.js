@@ -209,8 +209,8 @@ export default function useFormValidation(
    * Form-wide validation state check.
    */
   const isValid = useMemo(() => {
-    return Object.keys(errors).length === 0;
-  }, [errors]);
+    return Object.keys(errors).length === 0 && Object.keys(touched).length > 0;
+  }, [errors, touched]);
 
   return {
     values,

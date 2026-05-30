@@ -34,13 +34,15 @@ export function generatePortfolioMeta(userData) {
   
   // Generate description based on available data
   let desc = `Explore ${name}'s developer portfolio showcasing`;
+  const parts = [];
   if (skills && skills.length > 0) {
-    desc += ` ${skills.slice(0, 3).join(', ')},`;
+    parts.push(skills.slice(0, 3).join(', '));
   }
   if (projectCount > 0) {
-    desc += ` ${projectCount} projects,`;
+    parts.push(`${projectCount} projects`);
   }
-  desc += ` and technical expertise on NexaSphere.`;
+  parts.push('technical expertise on NexaSphere');
+  desc += ` ${parts.join(', ')}.`;
   if (bio) {
     desc = `${desc} ${bio.slice(0, 100)}${bio.length > 100 ? '...' : ''}`;
   }

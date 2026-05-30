@@ -31,7 +31,7 @@ Also add the admin dashboard URL to `CORS_ORIGIN` in the Java backend environmen
 - Activity Events management per category (8 activity types)
 - Core Team member add/remove
 - Event-driven UI — no page reloads on mutations
-- Skeleton loaders, toast notifications, confirm dialogs
+- Skeleton loaders, toast notifications, accessible confirmation modals
 - Auto-redirect to login on session expiry
 ## 👨‍💼 NexaSphere Admin Dashboard
 
